@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="c1">#17FF83</color>
+    <color name="c2">#31FF91</color>
+    <color name="c3">#4BFF94</color>
+    <color name="c4">#65FFAC</color>
+    <color name="c5">#7FFFBA</color>
+    <color name="c6">#97FFC7</color>
+    <color name="c7">#B1FFD5</color>
+    <color name="cTOP">#009B4C</color>
+    <color name="cBG">#31FF91</color>
+    <color name="Honeydew">#F0FFF0</color>
+    <color name="DarkOliveGreen">#556B2F</color>
+    <color name="DarkSlateGray">#2F4F4F</color>
+    <color name="whitegray">#F5F5F5</color>
+    <color name="WHITE">#FFFFFF</color>
+    <color name="fenlei_btn_bg">#71C671</color>
+    
+    <color name="black">#55000000</color>
+    <color name="exit_redh">#B22F32</color>
+    <color name="exit_redl">#F8A0AC</color>
+    <color name="exit_pressed_redl">#F88A8F</color>
+    <color name="exit_redm">#B22F32</color>
+    <color name="exit_redp">#A23F32</color>
+    <color name="bg_white">#CCFFFFFF</color>
+    <color name="gray">#757475</color>
+    <color name="green">#90CB9F</color>
+    <color name="backgray">#EEEEEF</color>
+    <color name="background_gray">#DDDDDD</color>
+</resources>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">华科地图</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="menu_settings">settings</string>
+    <string name="mess_1">充值点</string>
+    <string name="mess_2">办卡和充值点</string>
+    <string name="back">返回</string>
+    
+    <string name="action_settings">设置</string>
+    <string name="about">关于我们</string>
+    <string name="exit">退出程序</string>
+    <string name="feedback">反馈</string>
+    <string name="trouble">问题</string>
+    <string name="navigate">新生导航</string>
+    <string name="no_update_info">没有更新</string>
+
+</resources>

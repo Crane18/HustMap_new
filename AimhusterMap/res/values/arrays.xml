@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+   
+   <integer-array name= "lat">
+       <item >30518703</item>
+       <item >30518601</item>
+       <item >30511621</item>
+       <item >30511551</item>
+       <item >30513290</item>
+       <item >30513647</item>
+       <item >30513413</item>
+       <item >30513032</item>
+       <item >30517190</item>
+       <item >30512904</item>
+       <item >30513153</item>
+       <item >30512620</item>
+       <item >30511741</item>
+       <item >30511391</item>
+       <item >30518251</item>
+       <item >30522144</item>
+       <item >30518189</item>
+       <item >30520515</item>
+       <item >30519138</item>
+       <item >30519173</item>
+       <item >30518668</item>
+       <item >30515852</item>
+       <item >30518940</item>
+       <item >30519670</item>
+       <item >30520974</item>
+       <item >30517831</item>
+       <item >30516377</item>
+       <item >30520686</item>
+       <item >30520869</item>
+       <item >30522039</item>
+       
+       
+        
+    </integer-array>
+   
+   <integer-array name = "lon">
+       <item >114437868</item>
+       <item >114412976</item>
+       <item >114437999</item>
+       <item >114439404</item>
+       <item >114420307</item>
+       <item >114416687</item>
+       <item >114415187</item>       
+       <item >114423460</item>
+       <item >114407627</item>
+       <item >114414234</item>
+       <item >114418677</item>
+       <item >114424210</item>
+       <item >114433692</item>
+       <item >114438205</item>
+       <item >114414540</item>
+       <item >114420608</item>
+       <item >114439688</item>
+       <item >114432350</item>
+       <item >114419948</item>
+       <item >114412129</item>
+       <item >114438840</item>
+       <item >114424062</item>
+       <item >114438812</item>
+       <item >114438803</item>
+       <item >114427767</item>
+       <item >114411009</item>
+       <item >114416517</item>
+       <item >114413736</item>
+       <item >114430318</item>
+       <item >114420895</item>
+       
+       
+   </integer-array> 
+   
+    <integer-array name = "lat_navigate">
+        <item >30518469</item>
+        <item >30518099</item>
+        <item >30520355</item>
+        <item >30517387</item>
+        <item >30516088</item>
+        <item >30518371</item>
+        <item >30518830</item>
+        <item >30517049</item>
+        <item >30519919</item>
+        <item >30517088</item>
+        <item >30522264</item>
+    </integer-array>
+    
+    <integer-array name = "lon_navigate">
+        <item >114414285</item>
+        <item >114440662</item>
+        <item >114440874</item>
+        <item >114410188</item>
+        <item >114427646</item>
+        <item >114414540</item>
+        <item >114440932</item>
+        <item >114438457</item>
+        <item >114412151</item>
+        <item >114427287</item>
+        <item >114420608</item>
+    </integer-array>
+    
+    <string-array name = "poi_name">
+        <item >东边操场</item>
+        <item >西边操场</item>
+        <item >东小门</item>
+        <item >东大门</item>
+        <item >南一门</item>
+        <item >南二门</item>
+        <item >南三门</item>
+        <item >南四门</item>
+        <item >西小门</item>
+        <item >珞瑜路湖北省中医院站</item>
+        <item >珞瑜路关山口站</item>
+        <item >珞瑜东路叶麻店</item>
+        <item >珞喻东路大黄村站</item>
+        <item >珞瑜东路佳园路站</item>
+        <item >西边体育馆</item>
+        <item >集贸市场</item>
+        <item >韵苑学生公寓4幢</item>
+        <item >绝望坡</item>
+        <item >西一学生食堂</item>
+        <item >紫菘车站</item>
+        <item >东边水果摊</item>
+        <item >醉晚亭</item>
+        <item >快递点</item>
+        <item >东边校车站</item>
+        <item >喻园校车站</item>
+        <item >图文快印</item>
+        <item >西五教学楼</item>
+        <item >西学超市</item>
+        <item >华科全明星体育</item>
+        <item >集贸电器</item>
+    </string-array>
+    
+    <string-array name="navigate_array">
+        <item >迎新站：1:、领取“办理入校手续通知单”及“缴费入场劵”；2、查询宿舍楼及房间号</item>
+        <item >宿舍：办理住房手续，领取房间及个人物品柜钥匙</item>
+        <item >报到大厅：持“录取通知书”、“办理入校手续通知单”、“缴费入场劵”办理缴费（银行卡或现金均可）或领取收据（紫菘、沁苑在西边体育馆；韵苑在韵苑体育馆）</item>
+        <item >饭卡：持学生证到指定窗口办理金龙卡（韵苑：学一食堂；沁苑：东四餐厅；紫菘：西一食堂）</item>
+        <item >生活用品：可到集贸市场或超市购买</item>
+    </string-array>
+    
+    <string-array name = "navigate_places">
+        <item >西边操场</item>
+        <item >东十二教学楼前</item>
+        <item >韵苑公寓</item>
+        <item >紫菘公寓</item>
+        <item >沁苑公寓</item>
+        <item >西边体育馆</item>
+        <item >韵苑体育馆</item>
+        <item >学一食堂</item>
+        <item >西一食堂</item>
+        <item >东四餐厅</item>
+        <item >集贸市场</item>
+    </string-array>
+   
+</resources>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" 
+    android:descendantFocusability="blocksDescendants" 
+    android:background="@drawable/detail_listitem">
+    
+    <TextView 
+        android:id="@+id/phonenumber"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:textSize="9pt"
+        />
+    
+    <ImageButton
+        android:id="@+id/docall_noaddress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/call_btn_selector"
+        android:onClick="noaddress_click"  
+        android:focusable="false" 
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="10dp"
+       
+        />
+
+     <TextView 
+        android:id="@+id/staticview"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_alignParentLeft="true"
+        android:textSize="8pt"
+        android:text="无地址信息"
+        android:layout_marginLeft="10dp"
+        android:layout_toLeftOf="@id/phonenumber"
+        />
+
+</RelativeLayout>

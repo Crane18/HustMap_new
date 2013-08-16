@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android" 
+       android:shape="rectangle"
+       >
+       
+      <!-- 渐变 --> 
+       <gradient  
+       android:startColor="@color/exit_redh"
+       android:centerColor="@color/exit_redm"  
+       android:endColor="@color/exit_pressed_redl"  
+       
+       android:angle="270" 
+       />
+       
+      <!-- 描边 --> 
+      <!-- <stroke android:width="1dip"     
+       android:color="@color/black" 
+       /> -->
+      
+       
+      <!-- 圆角 -->  
+       <corners 
+       android:bottomRightRadius="4dip" 
+       android:bottomLeftRadius="4dip" 
+       android:topLeftRadius="4dip" 
+       android:topRightRadius="4dip" 
+       />
+</shape> 

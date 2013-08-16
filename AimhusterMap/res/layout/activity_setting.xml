@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" 
+    android:background="@color/background_gray">
+    
+    
+    
+     <RelativeLayout
+            
+             android:layout_width="fill_parent"
+             android:layout_height="wrap_content"       
+             android:background="@drawable/top_bg"
+             >
+
+         <Button
+            android:id="@+id/back_setting"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/back_btn_style"
+            />
+        
+        <TextView
+            android:layout_height="wrap_content"
+            android:layout_width="fill_parent"
+            android:gravity="center"
+            android:layout_centerVertical="true"
+            android:textSize="10pt"
+            android:textColor="@color/bg_white"
+            android:text="@string/action_settings"
+            />
+    </RelativeLayout>
+    
+     <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"      
+        android:layout_marginTop="20dp" 
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        >
+        
+               
+       <TextView   
+           android:id="@+id/navigate" 
+           android:layout_width="fill_parent"   
+           android:layout_height="wrap_content"
+           android:paddingTop="8dp"         
+           android:paddingBottom="8dp"
+           android:paddingLeft="18dp" 
+           android:text="@string/navigate" 
+           android:textSize="18dip"    
+           android:clickable="true"
+           android:background="@drawable/selector"
+           />  
+           
+       <ImageView
+           android:id="@+id/arrow_navigate"
+           android:layout_alignParentRight="true"
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content"  
+           android:layout_centerVertical="true"         
+           android:paddingRight="10dp"
+           android:src="@drawable/arrow"/>
+       
+       <ImageView 
+           android:layout_height="wrap_content"
+           android:layout_width="wrap_content"
+           android:layout_toLeftOf="@id/arrow_navigate"
+           android:layout_marginRight="2dp"
+           android:layout_centerVertical="true"
+           android:src="@drawable/friendactivity_newnotice"/>
+       
+    
+    </RelativeLayout>
+    
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"      
+        android:layout_marginTop="20dp" 
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        >
+        
+               
+       <TextView   
+           android:id="@+id/trouble" 
+           android:layout_width="fill_parent"   
+           android:layout_height="wrap_content"
+           android:paddingTop="8dp"         
+           android:paddingBottom="8dp"
+           android:paddingLeft="18dp" 
+           android:text="@string/trouble" 
+           android:textSize="18dip"    
+           android:clickable="true"
+           android:background="@drawable/top_selector"
+           
+           />  
+       <ImageView
+           android:layout_alignParentRight="true"
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content"  
+           android:layout_centerVertical="true"         
+           android:paddingRight="10dp"
+           android:src="@drawable/arrow"/>
+    
+    </RelativeLayout>
+    
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"      
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        >
+        
+               
+       <TextView   
+           android:id="@+id/feedback" 
+           android:layout_width="fill_parent"   
+           android:layout_height="wrap_content"
+           android:paddingTop="8dp"         
+           android:paddingBottom="8dp"
+           android:paddingLeft="18dp" 
+           android:text="@string/feedback" 
+           android:textSize="18dip"    
+           android:clickable="true"
+           android:background="@drawable/center_selector"
+           
+           />  
+       <ImageView
+           android:layout_alignParentRight="true"
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content"  
+           android:layout_centerVertical="true"         
+           android:paddingRight="10dp"
+           android:src="@drawable/arrow"/>
+    
+    </RelativeLayout>
+    
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"      
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        >
+        
+               
+       <TextView   
+           android:id="@+id/about" 
+           android:layout_width="fill_parent"   
+           android:layout_height="wrap_content"
+           android:paddingTop="8dp"         
+           android:paddingBottom="8dp"
+           android:paddingLeft="18dp" 
+           android:text="@string/about" 
+           android:textSize="18dip"    
+           android:clickable="true"
+           android:background="@drawable/bottom_selector"
+           
+           />  
+       <ImageView
+           android:layout_alignParentRight="true"
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content"  
+           android:layout_centerVertical="true"         
+           android:paddingRight="10dp"
+           android:src="@drawable/arrow"/>
+    
+    </RelativeLayout>
+    
+    
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"      
+        android:layout_marginTop="20dp" 
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:padding="2dp" 
+        android:background="@drawable/app_list_corner_round"
+        >
+       <Button
+          android:id="@+id/exit" 
+          android:layout_width="fill_parent"   
+          android:layout_height="wrap_content" 
+          android:padding="5dp"   
+          android:gravity="center"  
+          android:text="@string/exit"
+          android:textSize="22dip" 
+          android:background="@drawable/exit_selector"
+          android:textColor="@color/bg_white"/>
+       </RelativeLayout>
+
+    
+    
+    
+
+</LinearLayout>

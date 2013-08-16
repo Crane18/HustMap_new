@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="question_one">这个地图是离线的吗？</string>
+    <string name="question_two">为什么有些地点搜索不到？</string>
+    <string name="question_three">为什么定位有时候不准确？</string>
+    <string name="question_four">为什么不在武汉就不能定位呢？</string>
+    <string name="question_five">这个地图只能查看武汉的吗？</string>
+    
+    <string name="answer_one">答：是的，除了反馈信息，其他包括地图和搜索都是离线的，完全不使用您的流量</string>
+    <string name="answer_two">答：你可尝试另外的关键词搜索，如果还没有，可以通过“设置反馈”给我们反馈相关问题，我们会尽快完善数据，方便你我他她</string>
+    <string name="answer_three">答：您可以选择开启GPS定位哦，GPS定位非常准，而且也是不使用流量的哦，不信你把流量关掉试试</string>
+    <string name="answer_four">答：这个软件是专门为华科学子打造的，离线地图也只有武汉市内，如果你的位置超出武汉，就不能定位哦</string>
+    <string name="answer_five">答：如果你选择打开流量，那还是可以查看地图的，只是不能搜索非华科的详细信息</string>
+    
+    <string name="location_one"></string>
+    
+    <string name="lat_one"></string>
+    
+    <string name="lon_one"></string>
+    
+    
+    
+</resources>

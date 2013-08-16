@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+ <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical"
+         >
+ 
+           <RelativeLayout
+            
+             android:layout_width="fill_parent"
+             android:layout_height="wrap_content"       
+             >
+          
+            <Button
+               android:id="@+id/search"
+               android:layout_height="wrap_content"
+               android:layout_width="wrap_content"
+               android:background="@drawable/search_btn_style"
+               android:layout_alignParentRight="true"
+               android:layout_marginRight="2dp"
+            />
+               
+               
+               
+             <EditText
+                  android:id="@+id/searchkey"
+                  android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"            
+                  android:textSize="10pt"
+                  android:textColor="@color/DarkSlateGray"
+                  android:layout_marginLeft="10dp"
+                  android:layout_marginRight="3dp"
+                  android:layout_centerVertical="true"
+                  android:layout_alignParentLeft="true"
+                  android:paddingLeft="2dp"
+                  android:background="@drawable/searchkey"
+                  android:hint="Search"
+                  android:ellipsize = "end"
+                  android:singleLine="true"
+                  android:textColorHighlight="@color/WHITE"
+                  android:layout_toLeftOf="@id/search"
+            />
+           
+   
+       
+    </RelativeLayout>
+    
+         
+ <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	    android:layout_width="match_parent"
+	    android:layout_height="match_parent" >
+
+         <com.baidu.mapapi.map.MapView android:id="@+id/bmapView"
+             android:layout_width="fill_parent" 
+             android:layout_height="fill_parent"             
+             android:clickable="true"     
+                 />
+        <ImageButton android:id="@+id/showbtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:background="@drawable/show_btn_arrow"/>
+          <LinearLayout
+	         xmlns:android="http://schemas.android.com/apk/res/android"
+	         android:layout_width="fill_parent"
+	         android:layout_height="wrap_content"
+	         android:layout_alignParentBottom="true"
+	         android:layout_alignWithParentIfMissing="false"
+	         android:layout_centerHorizontal="true"
+	         android:layout_centerVertical="false"
+	         android:weightSum="3.0"
+	         android:id="@+id/layout1"
+	         android:visibility="gone"
+	         android:animateLayoutChanges="true"
+	        >
+		
+			 <Button
+			     android:id="@+id/fenlei"
+			     android:layout_width="0dp"
+			     android:layout_height="wrap_content"
+			     android:layout_weight="1.0"
+			     android:focusable="true"
+			     android:background="@drawable/fenlei_btn"
+			      />
+			 <Button
+			     android:id="@+id/loc"
+			     android:layout_width="0dp"
+			     android:layout_height="wrap_content"
+			     android:layout_weight="1.0"
+			     android:focusable="true"
+			     android:background="@drawable/loc_btn"
+			      />
+			 <Button android:id="@+id/setting"
+			     android:layout_width="0dp"
+			     android:layout_height="wrap_content"
+			     android:layout_weight="1.0"
+			     android:focusable="true"
+			     android:background="@drawable/setting_btn"/>
+	
+	    </LinearLayout>
+	      <ListView
+              android:id="@+id/listview1"
+              android:background="@color/Honeydew"
+              android:layout_width="fill_parent"
+              android:layout_height="wrap_content"
+              android:layout_alignParentTop="true"          
+              android:visibility="gone"         
+              />
+          
+      </RelativeLayout>
+
+</LinearLayout>
