@@ -33,6 +33,7 @@ public class MapManager {
 		  boolean b = false;
 		  
 		  String path = Environment.getExternalStorageDirectory().toString();
+		  System.out.println("-------------------->1111path=="+path);
 		  String mapPath = path+"/BaiduMapSdk/vmp" + foder;
 //		  String mapName = "Wu_Han_Shi_21.dat_svc";
 			// 检查 SQLite 数据库文件是否存在

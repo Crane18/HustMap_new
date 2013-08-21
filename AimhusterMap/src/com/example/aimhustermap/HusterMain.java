@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -14,6 +16,8 @@ import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -68,8 +72,10 @@ import com.example.aimhustermap.adapter.No_addressAdapter;
 import com.example.aimhustermap.db.DatabaseHust;
 import com.example.aimhustermap.db.DatabaseSearcher;
 import com.example.aimhustermap.map.MapManager;
+import com.umeng.update.UmengUpdateAgent;
 
 
+@SuppressLint("HandlerLeak")
 public class HusterMain extends Activity {
 	
 	//获取手机屏幕分辨率的类  
@@ -126,7 +132,8 @@ public class HusterMain extends Activity {
             private Button settingButton=null;
             private ImageButton showButton=null;
             private LinearLayout layout;//下面菜单栏
-            private Handler handler  =new Handler()
+            @SuppressLint("HandlerLeak")
+			private  Handler handler  =new Handler()
             {
          	   @Override
          	   public void handleMessage(Message msg)
@@ -177,12 +184,15 @@ public class HusterMain extends Activity {
 		setContentView(R.layout.activity_huster_main);
 		
 		getWindowManager().getDefaultDisplay().getMetrics(metrics);
-		if(metrics.heightPixels==960)
+		if(metrics.heightPixels<=960&&metrics.heightPixels>=800)
 		{
 			fontSize = 18;
 		}
+		else if (metrics.heightPixels>=480&&metrics.heightPixels<800) {
+			fontSize = 14;
+		}
 		else {
-			fontSize = 28;
+			fontSize = 25;
 		}
 		
 		mMapView=(MapView)findViewById(R.id.bmapView);
@@ -197,8 +207,6 @@ public class HusterMain extends Activity {
         mMapController.enableClick(true);
         
         mMapController.setOverlookingGesturesEnabled(false);
-        
-        mMapController.setCompassMargin(34, 50);
         /**
          * 设置地图缩放级别
          */
@@ -269,7 +277,13 @@ public class HusterMain extends Activity {
                   }  
         }  
         ); 
-     
+        
+        //检测到wifi且有更新时提示更新
+       if (((WifiManager)this.getSystemService(Context.WIFI_SERVICE)).isWifiEnabled()) {
+        	
+        	//System.out.println("wifi is enable");
+			UmengUpdateAgent.update(this);
+	   	}
 
         MapManager mapManager=new MapManager(HusterMain.this);
         mapManager.includeMap();
@@ -315,6 +329,7 @@ public class HusterMain extends Activity {
 					}
 			}
 			
+			@SuppressLint("NewApi")
 			@Override
 			public void onClickMapPoi(MapPoi mapPoiInfo) {
 				/**
@@ -336,20 +351,39 @@ public class HusterMain extends Activity {
 					mySearcher=new DatabaseSearcher(HusterMain.this);
 		    		List<DatabaseHust>  databaseHusts=new ArrayList<DatabaseHust>();
 		    		databaseHusts=mySearcher.search(p);
-		    		//System.out.println("------------------>dataSize:"+databaseHusts.size());
+		    		System.out.println("------------------>hhhhhhhhhhhhhhh  dataSize:"+databaseHusts.size());
+
+		    		boolean hasDetail=false;
 		    		if(!databaseHusts.isEmpty()){
-		    			Intent intent=new Intent(HusterMain.this,ShowDetail_Activity.class);
-		    			intent.putExtra("x", databaseHusts.get(0).geoPoint.getLongitudeE6());
-		    			intent.putExtra("y", databaseHusts.get(0).geoPoint.getLatitudeE6());
-		    			startActivity(intent);
+		                
+		    			for (int i = 0; i < databaseHusts.size(); i++) {
+							if(!databaseHusts.get(i).buildingName.equals(databaseHusts.get(i).officeNanme) )
+							{
+								hasDetail=true;
+								break;
+							}
+						}
+		    			
+		    			if(!hasDetail||(databaseHusts.size()==1&&databaseHusts.get(0).officePhone.isEmpty()))
+		    			{
+		    				Toast.makeText(HusterMain.this, databaseHusts.get(0).buildingName, Toast.LENGTH_SHORT).show();
+		    				mMapController.animateTo(p);
+		    				
+		    			}
+		    			else {
+		    				Intent intent=new Intent(HusterMain.this,ShowDetail_Activity.class);
+			    			intent.putExtra("x", p.getLongitudeE6());
+			    			intent.putExtra("y", p.getLatitudeE6());
+			    			startActivity(intent);
+						}
+		    			
 		    			
 		    		
 		    		}
 		    		else{
-		    			Toast.makeText(HusterMain.this, "亲，抱歉无详情！", Toast.LENGTH_SHORT).show();
+		    			Toast.makeText(HusterMain.this, mapPoiInfo.strText, Toast.LENGTH_SHORT).show();
 		    			
 		    		}
-					//Toast.makeText(HusterMain.this,title,Toast.LENGTH_SHORT).show();
 					mMapController.animateTo(p);
 				}
 			}
@@ -527,13 +561,15 @@ public class HusterMain extends Activity {
 			    locationFinish=true;
 			    mLocClient.requestLocation();
 				Toast.makeText(HusterMain.this, "正在定位…", Toast.LENGTH_SHORT).show();
-			    mMapController.setZoom(15);
-			    clearLable();//清除标注物
+			   	   
 				if(isLocked)
 				 {
 					 Toast.makeText(HusterMain.this, "不在武汉市或定位不成功，开启GPS或网络！", Toast.LENGTH_SHORT).show();
 				}
-				
+				else {
+					 mMapController.setZoom(15);
+				}
+				 clearLable();//清除标注物
 			}
 		});
 
@@ -851,7 +887,9 @@ public class HusterMain extends Activity {
     	}
     	
 
-    	@Override
+    	@TargetApi(Build.VERSION_CODES.GINGERBREAD)
+		@SuppressLint("NewApi")
+		@Override
     	public boolean onTap(int index){
     		OverlayItem item = getItem(index);
     		//Toast.makeText(HusterMain.this, "item: "+String.valueOf(index)+" "+"has been touched", Toast.LENGTH_SHORT).show();
@@ -865,7 +903,7 @@ public class HusterMain extends Activity {
     		if(!databaseHusts.isEmpty()){
                 
     			for (int i = 0; i < databaseHusts.size(); i++) {
-					if(!databaseHusts.get(i).officeNanme.isEmpty())
+					if(!databaseHusts.get(i).buildingName.equals(databaseHusts.get(i).officeNanme) )
 					{
 						hasDetail=true;
 						break;
@@ -874,7 +912,7 @@ public class HusterMain extends Activity {
     			
     			if(!hasDetail||(databaseHusts.size()==1&&databaseHusts.get(0).officePhone.isEmpty()))
     			{
-    				Toast.makeText(HusterMain.this, "亲，抱歉无详情！", Toast.LENGTH_SHORT).show();
+    				Toast.makeText(HusterMain.this, databaseHusts.get(0).buildingName, Toast.LENGTH_SHORT).show();
     				mMapController.animateTo(item.getPoint());
     				return true;
     			}
@@ -888,8 +926,9 @@ public class HusterMain extends Activity {
     			
     		return true;
     		}
+    		
     		else{
-    			Toast.makeText(HusterMain.this, "亲，抱歉无详情！", Toast.LENGTH_SHORT).show();
+    			Toast.makeText(HusterMain.this, item.getSnippet(), Toast.LENGTH_SHORT).show();
     			mMapController.animateTo(item.getPoint());
     			return true;
     		}

@@ -5,12 +5,11 @@
                  
                     <stroke 
                          android:width="1dp" 
-                         android:color="#636363" />
-                   <corners android:topLeftRadius="4dp"
-                       android:topRightRadius="4dp"/>   
+                         android:color="#FFFFFF" />
+                
                    
                    <solid 
-                       android:color="#32CD32"/>
+                       android:color="#CFCFCF"/>
               </shape>       
     </item> 
 
@@ -18,12 +17,11 @@
                <shape xmlns:android="http://schemas.android.com/apk/res/android"
                  android:shape="rectangle"   >
                     <solid 
-                        android:color="#32CD32"/> 
+                        android:color="#CFCFCF"/> 
                     <stroke 
                          android:width="1dp" 
-                         android:color="#636363" />
-                   <corners android:topLeftRadius="4dp"
-                       android:topRightRadius="4dp"/>    
+                         android:color="#FFFFFF" />
+                  
               </shape>       
     </item>     
 
@@ -33,11 +31,10 @@
                  
                     <stroke 
                          android:width="1dp" 
-                         android:color="#636363" />
-                   <corners android:topLeftRadius="4dp"
-                       android:topRightRadius="4dp"/>  
+                         android:color="#FFFFFF" />
+                    
                    <solid 
-                       android:color="#90EE90"/>  
+                       android:color="#F5F5F5"/>  
               </shape> 
 	</item>
 

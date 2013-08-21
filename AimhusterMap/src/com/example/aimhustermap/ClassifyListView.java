@@ -8,7 +8,9 @@ import com.baidu.mapapi.map.OverlayItem;
 import com.example.aimhustermap.adapter.FenleiAdapter;
 import com.example.aimhustermap.db.DatabaseHust;
 import com.example.aimhustermap.db.DatabaseSearcher;
+import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
@@ -23,6 +25,8 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
@@ -47,6 +51,9 @@ public class ClassifyListView extends Activity {
 	FenleiAdapter adapter=null;
 	ListView list=null;
     ArrayList<OverlayItem>  items=new ArrayList<OverlayItem>();
+    
+    private Dialog dialog;
+    
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -99,7 +106,8 @@ public class ClassifyListView extends Activity {
 		 
 
 		 list.setOnItemLongClickListener(new OnItemLongClickListener() {
-	    	 @Override
+	    	 @SuppressLint("NewApi")
+			@Override
 	            public boolean onItemLongClick(AdapterView<?> parent, View view,  
 	                    int position, long id) {
            
@@ -109,7 +117,7 @@ public class ClassifyListView extends Activity {
 	    		 name=textView2.getText().toString();
 	    		 if(!officePhone.isEmpty())
 	    		 {
-	    			 showPopup_ask(ClassifyListView.this, view);
+	    			 showPopup_ask(ClassifyListView.this,officePhone);
                     
 	    		 }
 	    		 return true;
@@ -155,40 +163,33 @@ public class ClassifyListView extends Activity {
 		     	
 	}
 	
-	  private void showPopup_ask(Context context,View anchor)
+	  private void showPopup_ask(Context context,String phoneNumber)
 	    {        
 	       
 	        // 【Ⅰ】 获取自定义popupWindow布局文件
-	
-	        LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);        
-	        final View vPopupWindow = inflater.inflate(R.layout.popup_contacts, null, false);	           
-	        vPopupWindow.setBackgroundColor(Color.WHITE);
-	   
-	     // 【Ⅳ】自定义布局中的事件响应
-	    	// OK按钮及其处理事件
-	        final Button addContacts = (Button) vPopupWindow.findViewById(R.id.add_contacts);	
-  	        final Button copyButton=(Button)vPopupWindow.findViewById(R.id.copy_phonenum);
-	    	// 获取屏幕和对话框各自高宽
-	        int screenWidth, screenHeight, dialgoWidth, dialgoheight;
-//	        screenWidth = context.getWindowManager().getDefaultDisplay().getWidth();
-//	        screenHeight = context.getWindowManager().getDefaultDisplay().getHeight();
-	     // 【Ⅱ】 创建PopupWindow实例
-	        final PopupWindow   pw = new PopupWindow(vPopupWindow, LayoutParams.WRAP_CONTENT,LayoutParams.WRAP_CONTENT, true);// 声明一个弹出框 ，最后一个参数和setFocusable对应
-	        pw.setContentView(vPopupWindow);   // 为弹出框设定自定义的布局 
-	      //pw.setBackgroundDrawable(getResources().getDrawable(R.drawable.rounded_corners_pop));//设置整个popupwindow的样式。
-	        pw.setAnimationStyle(R.style.PopupAnimation);
-	        pw.setOutsideTouchable(true);
-	        pw.setBackgroundDrawable(new BitmapDrawable());      
-	        dialgoWidth = pw.getWidth();
-	        dialgoheight = pw.getHeight();	       
-//	        pw.showAsDropDown(anchor, 0, 0);
-			pw.showAtLocation(anchor, Gravity.CENTER, 0, 0);
+		  
+		  dialog = new Dialog(context);
+	     // dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+	      dialog.show();
+	      dialog.setContentView(R.layout.popup_contacts);
+	      dialog.setTitle(phoneNumber+" : ");
+//	      WindowManager.LayoutParams layoutParams = dialog.getWindow().getAttributes();
+//	      layoutParams.alpha = 0.6f; 
+//	      dialog.getWindow().setAttributes(layoutParams);
+	      
+	        final Button addContacts = (Button) dialog.findViewById(R.id.add_contacts);	
+  	        final Button copyButton=(Button)dialog.findViewById(R.id.copy_phonenum);
+  	        
+	       dialog.setCanceledOnTouchOutside(true);
+	        
+	      
+	     
 	        addContacts.setOnClickListener(new OnClickListener() {
 				
 				@Override
 				public void onClick(View v) {
 					// TODO Auto-generated method stub
-					pw.dismiss();
+					dialog.dismiss();
 					Intent intent = new Intent(Intent.ACTION_INSERT_OR_EDIT);
 			           intent.setType(People.CONTENT_ITEM_TYPE);
 			           intent.putExtra(Contacts.Intents.Insert.NAME, name);
@@ -205,7 +206,7 @@ public class ClassifyListView extends Activity {
 				@Override
 				public void onClick(View v) {
 					// TODO Auto-generated method stub
-					pw.dismiss();
+					dialog.dismiss();
 					copyText(ClassifyListView.this, officePhone);
 					Toast.makeText(ClassifyListView.this, "亲，电话号码已复制哦！", Toast.LENGTH_SHORT).show();
 				}

@@ -9,7 +9,9 @@ import com.example.aimhustermap.adapter.ShowDetailAdapter;
 import com.example.aimhustermap.db.DatabaseHust;
 import com.example.aimhustermap.db.DatabaseSearcher;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
@@ -28,7 +30,6 @@ import android.view.View.OnClickListener;
 import android.view.View.OnKeyListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemLongClickListener;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.PopupWindow;
@@ -58,6 +59,7 @@ public class ShowDetail_Activity extends Activity{
 	ListView listView;
 	List<DatabaseHust>  databaseHusts=new ArrayList<DatabaseHust>();
 	List<DatabaseHust>  final_daDatabaseHusts;
+	@SuppressLint("NewApi")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -71,7 +73,7 @@ public class ShowDetail_Activity extends Activity{
 		DatabaseSearcher mySearcher=new DatabaseSearcher(this);
 		final_daDatabaseHusts = new ArrayList<DatabaseHust>();
 		databaseHusts=mySearcher.search(p);
-		textView.setText(databaseHusts.get(0).buildingName);
+		
 		System.out.println("------------>databaseHusts.Size=="+String.valueOf(databaseHusts.size()));
 		
 //		for (int i = 0; i < databaseHusts.size(); i++) {
@@ -80,12 +82,21 @@ public class ShowDetail_Activity extends Activity{
 //					"lat="+databaseHusts.get(i).geoPoint.getLatitudeE6()+",lon="+databaseHusts.get(i).geoPoint.getLongitudeE6());
 //		}
 		for (int i = 0; i < databaseHusts.size(); i++) {
-			if(!databaseHusts.get(i).officeNanme.isEmpty())
+			if(!databaseHusts.get(i).buildingName.equals(databaseHusts.get(i).officeNanme))
 			{
 				final_daDatabaseHusts.add(databaseHusts.get(i));
 			}
 			
 		}
+		
+		for (int i = 0; i < final_daDatabaseHusts.size(); i++) {
+			System.out.println("-------->databaseHust"+"("+String.valueOf(i)+"):"+"officename="+final_daDatabaseHusts.get(i).officeNanme
+					+"  "+"officePhone="+final_daDatabaseHusts.get(i).officePhone+"  "+"officeroom="+final_daDatabaseHusts.get(i).officeRoom+
+					"  lat="+final_daDatabaseHusts.get(i).geoPoint.getLatitudeE6()+",lon="+final_daDatabaseHusts.get(i).geoPoint.getLongitudeE6());
+		}
+		
+		textView.setText(final_daDatabaseHusts.get(0).buildingName);
+		
 		adapter=new ShowDetailAdapter(this, final_daDatabaseHusts);
 		listView=(ListView)findViewById(R.id.detail_listview);
 		listView.setAdapter(adapter);
@@ -103,7 +114,8 @@ public class ShowDetail_Activity extends Activity{
 		        }  
 			});
 		   listView.setOnItemLongClickListener(new OnItemLongClickListener() {
-			   @Override
+			   @SuppressLint("NewApi")
+			@Override
 	            public boolean onItemLongClick(AdapterView<?> parent, View view,  
 	                    int position, long id) {
 				   TextView office_textView=(TextView)view.findViewById(R.id.officename1);
@@ -113,7 +125,7 @@ public class ShowDetail_Activity extends Activity{
 					address=textView.getText().toString();
 					if(!officePhone.isEmpty())
 					{
-						showpopup_ask(ShowDetail_Activity.this,view);
+						showPopup_ask(ShowDetail_Activity.this,officePhone);
 						
 					}
 					
@@ -152,48 +164,30 @@ public class ShowDetail_Activity extends Activity{
      	
 	}
 	
-	 private void showpopup_ask(Context context,View anchor)
-	  {        
+	 private void showPopup_ask(Context context,String phoneNumber)
+	    {        
+	       
+	        // 【Ⅰ】 获取自定义popupWindow布局文件
+		  
+		   final Dialog  dialog = new Dialog(context);
 	     
-	// 【Ⅰ】 获取自定义popupWindow布局文件
-
-	LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);        
-	final View vPopupWindow = inflater.inflate(R.layout.popup_contacts, null, false);
-	// 【Ⅱ】 创建PopupWindow实例    
-	      vPopupWindow.setBackgroundColor(Color.WHITE);
-	   // /////////////////////////////////////////////////////
-	   // 【Ⅳ】自定义布局中的事件响应
-	  	// OK按钮及其处理事件
-	  	        final Button addContacts = (Button) vPopupWindow.findViewById(R.id.add_contacts);	
-	  	        final Button copyButton=(Button)vPopupWindow.findViewById(R.id.copy_phonenum);
-//	            final Button btnCancel=(Button) vPopupWindow.findViewById(R.id.no);
-	  	// 获取屏幕和对话框各自高宽
-	      int screenWidth, screenHeight, dialgoWidth, dialgoheight;
-//	      screenWidth = context.getWindowManager().getDefaultDisplay().getWidth();
-//	      screenHeight = context.getWindowManager().getDefaultDisplay().getHeight();
-	     final PopupWindow   pw = new PopupWindow(vPopupWindow, LayoutParams.WRAP_CONTENT,LayoutParams.WRAP_CONTENT, true);// 声明一个弹出框 ，最后一个参数和setFocusable对应
-	      pw.setContentView(vPopupWindow);   // 为弹出框设定自定义的布局 
-	    //pw.setBackgroundDrawable(getResources().getDrawable(R.drawable.rounded_corners_pop));//设置整个popupwindow的样式。
-	      pw.setAnimationStyle(R.style.PopupAnimation);
-	      pw.setOutsideTouchable(true);
-	      pw.setBackgroundDrawable(new BitmapDrawable());      
-	      dialgoWidth = pw.getWidth();
-	      dialgoheight = pw.getHeight();	       
-//	      pw.showAsDropDown(anchor, 0, 0);
-				pw.showAtLocation(anchor, Gravity.CENTER, 0, 0);
-	       addContacts.setOnClickListener(new OnClickListener() {
+	      dialog.setContentView(R.layout.popup_contacts);
+	      dialog.setTitle(phoneNumber+" : ");
+	      
+	      
+	        final Button addContacts = (Button) dialog.findViewById(R.id.add_contacts);	
+	        final Button copyButton=(Button)dialog.findViewById(R.id.copy_phonenum);
+	        
+	       dialog.setCanceledOnTouchOutside(true);
+	        
+	       dialog.show();
+	     
+	        addContacts.setOnClickListener(new OnClickListener() {
 				
 				@Override
 				public void onClick(View v) {
 					// TODO Auto-generated method stub
-					pw.dismiss();
-//					Intent intent = new Intent();   
-//		    		 
-//		    		 intent.setAction(Intent.ACTION_VIEW);   
-//		    		  
-//		    		 intent.setData(Contacts.People.CONTENT_URI); 
-//		    		 startActivity(intent);
-					
+					dialog.dismiss();
 					Intent intent = new Intent(Intent.ACTION_INSERT_OR_EDIT);
 			           intent.setType(People.CONTENT_ITEM_TYPE);
 			           intent.putExtra(Contacts.Intents.Insert.NAME, name);
@@ -202,32 +196,21 @@ public class ShowDetail_Activity extends Activity{
 			           intent.putExtra(Contacts.Intents.Insert.PHONE_TYPE,Contacts.PhonesColumns.TYPE_MOBILE);
 			          
 			           startActivity(intent);
+				
 				}
 			});
-	       copyButton.setOnClickListener(new OnClickListener() {
+	        copyButton.setOnClickListener(new OnClickListener() {
 				
 				@Override
 				public void onClick(View v) {
 					// TODO Auto-generated method stub
-					
+					dialog.dismiss();
 					copyText(ShowDetail_Activity.this, officePhone);
-					pw.dismiss();
 					Toast.makeText(ShowDetail_Activity.this, "亲，电话号码已复制哦！", Toast.LENGTH_SHORT).show();
-					
 				}
 			});
-	       vPopupWindow.setFocusableInTouchMode(true);
-			 vPopupWindow.setOnKeyListener(new OnKeyListener() {
-					  public boolean onKey(View v, int keyCode, KeyEvent event)
-					    {
-					        if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_BACK)
-					            pw.dismiss();
-					 
-					        return false;
-					    }
-				});
-	  
-	  }
+
+	    }
 	
 	  public  void copyText(Context context, String text) {
 		    ClipboardManager cm = (ClipboardManager) context

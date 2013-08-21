@@ -18,12 +18,12 @@
        <item >30511391</item>
        <item >30518251</item>
        <item >30522144</item>
-       <item >30518189</item>
+       <item >30518519</item>
        <item >30520515</item>
        <item >30519138</item>
        <item >30519173</item>
        <item >30518668</item>
-       <item >30515852</item>
+       <item >30515822</item>
        <item >30518940</item>
        <item >30519670</item>
        <item >30520974</item>
@@ -32,8 +32,8 @@
        <item >30520686</item>
        <item >30520869</item>
        <item >30522039</item>
-       
-       
+       <item >30519228</item>
+       <item >30514855</item>
         
     </integer-array>
    
@@ -54,7 +54,7 @@
        <item >114438205</item>
        <item >114414540</item>
        <item >114420608</item>
-       <item >114439688</item>
+       <item >114439382</item>
        <item >114432350</item>
        <item >114419948</item>
        <item >114412129</item>
@@ -68,7 +68,8 @@
        <item >114413736</item>
        <item >114430318</item>
        <item >114420895</item>
-       
+       <item >114433545</item>
+       <item >114413947</item>
        
    </integer-array> 
    
@@ -84,6 +85,9 @@
         <item >30519919</item>
         <item >30517088</item>
         <item >30522264</item>
+        <item >30520180</item>
+        <item >30516489</item>
+        <item >30520806</item>
     </integer-array>
     
     <integer-array name = "lon_navigate">
@@ -98,6 +102,9 @@
         <item >114412151</item>
         <item >114427287</item>
         <item >114420608</item>
+        <item >114438744</item>
+        <item >114426335</item>
+        <item >114413736</item>
     </integer-array>
     
     <string-array name = "poi_name">
@@ -130,7 +137,9 @@
         <item >西五教学楼</item>
         <item >西学超市</item>
         <item >华科全明星体育</item>
-        <item >集贸电器</item>
+        <item >华明电器</item>
+        <item >东九教学楼</item>
+        <item >西十二教学楼</item>
     </string-array>
     
     <string-array name="navigate_array">
@@ -153,6 +162,9 @@
         <item >西一食堂</item>
         <item >东四餐厅</item>
         <item >集贸市场</item>
+        <item >韵苑学生服务中心</item>
+        <item >东区学生服务中心</item>
+        <item >西学超市</item>
     </string-array>
    
 </resources>

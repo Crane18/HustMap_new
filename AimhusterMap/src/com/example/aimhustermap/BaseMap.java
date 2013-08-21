@@ -10,6 +10,7 @@ import com.baidu.location.BDLocation;
 import com.baidu.location.BDLocationListener;
 import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
+import com.baidu.location.i;
 import com.baidu.mapapi.BMapManager;
 import com.baidu.mapapi.map.ItemizedOverlay;
 import com.baidu.mapapi.map.LocationData;
@@ -27,6 +28,9 @@ import com.baidu.platform.comapi.basestruct.GeoPoint;
 import com.example.aimhustermap.HusterMain.MyOverlay;
 import com.example.aimhustermap.db.DatabaseHust;
 import com.example.aimhustermap.db.DatabaseSearcher;
+
+import android.R.integer;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -112,7 +116,7 @@ public class BaseMap extends Activity{
 	        /**
 	          * 由于MapView在setContentView()中初始化,所以它需要在BMapManager初始化之后
 	          */
-	        this.requestWindowFeature(Window.FEATURE_NO_TITLE);//去掉标题栏
+	      
 	        
 	        
 	        setContentView(R.layout.basemap);
@@ -201,9 +205,9 @@ public class BaseMap extends Activity{
 					break;
 					
 				case 1:
-					items1.add(items.get(2));
-					items1.add(items.get(3));
 					items1.add(items.get(4));
+					items1.add(items.get(3));
+					items1.add(items.get(2));
 					items1.get(0).setMarker(getResources().getDrawable(R.drawable.icon_marka));
 					items1.get(1).setMarker(getResources().getDrawable(R.drawable.icon_markb));
 					items1.get(2).setMarker(getResources().getDrawable(R.drawable.icon_markc));
@@ -227,7 +231,13 @@ public class BaseMap extends Activity{
  
 				case 4:
 					items1.add(items.get(10));
+					items1.add(items.get(11));
+					items1.add(items.get(12));
+					items1.add(items.get(13));
 					items1.get(0).setMarker(getResources().getDrawable(R.drawable.icon_marka));
+					items1.get(1).setMarker(getResources().getDrawable(R.drawable.icon_markb));
+					items1.get(2).setMarker(getResources().getDrawable(R.drawable.icon_markc));
+					items1.get(3).setMarker(getResources().getDrawable(R.drawable.icon_markd));
 					break;
 					
 				default:
@@ -244,7 +254,7 @@ public class BaseMap extends Activity{
 	        
 	       
 	        autoLocation();
-	        mMapController.setCenter(items1.get(0).getPoint());
+	       // mMapController.setCenter(items1.get(0).getPoint());
 	        initOverlay(items1);
 	        
 	        
@@ -285,12 +295,12 @@ public class BaseMap extends Activity{
 					 * 设置过： mMapController.enableClick(true); 时，此回调才能被触发
 					 * 
 					 */
-//					String title = "";
-//					if (mapPoiInfo != null){
-//						title = mapPoiInfo.strText;
-						Toast.makeText(BaseMap.this,"亲，抱歉无详情",Toast.LENGTH_SHORT).show();
+					String title = "";
+					if (mapPoiInfo != null){
+						title = mapPoiInfo.strText;
+						Toast.makeText(BaseMap.this,title,Toast.LENGTH_SHORT).show();
 						mMapController.animateTo(mapPoiInfo.geoPt);
-					
+					}
 				}
 
 				@Override
@@ -447,7 +457,8 @@ public class BaseMap extends Activity{
 	    	}
 	    	
 
-	    	@Override
+	    	@SuppressLint("NewApi")
+			@Override
 	    	public boolean onTap(int index){
 	    		OverlayItem item = getItem(index);
 	    		//Toast.makeText(HusterMain.this, "item: "+String.valueOf(index)+" "+"has been touched", Toast.LENGTH_SHORT).show();
@@ -460,7 +471,7 @@ public class BaseMap extends Activity{
 	    		if(!databaseHusts.isEmpty()){
                     
 	    			for (int i = 0; i < databaseHusts.size(); i++) {
-						if(!databaseHusts.get(i).officeNanme.isEmpty())
+						if(!databaseHusts.get(i).buildingName.equals(databaseHusts.get(i).officeNanme))
 						{
 							hasDetail=true;
 							break;
@@ -470,6 +481,7 @@ public class BaseMap extends Activity{
 	    			if(!hasDetail||(databaseHusts.size()==1&&databaseHusts.get(0).officePhone.isEmpty()))
 	    			{
 	    				Toast.makeText(BaseMap.this, item.getSnippet(), Toast.LENGTH_SHORT).show();
+	    				mMapController.animateTo(item.getPoint());
 	    			}
 	    			else {
 	    				Intent intent=new Intent(BaseMap.this,ShowDetail_Activity.class);
@@ -552,6 +564,16 @@ public class BaseMap extends Activity{
 	    	mMapView.getOverlays().add(mOverlay);
 	    	mMapView.refresh();
 	    	clearLable();
+	    	int center_lat = 0;
+	    	int center_lon = 0;
+	    	for(int i = 0;i<mItems.size();i++)
+	    	{
+	    		center_lat += mItems.get(i).getPoint().getLatitudeE6();
+	    		center_lon += mItems.get(i).getPoint().getLongitudeE6();
+	    	}
+	    	center_lat = center_lat/mItems.size();
+	    	center_lon = center_lon/mItems.size();
+	    	mMapController.setCenter(new GeoPoint(center_lat, center_lon));
 	    	mMapController.setZoom((float) 14.6);
 	    }
 	    
