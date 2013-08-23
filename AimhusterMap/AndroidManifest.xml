@@ -70,7 +70,7 @@
             android:name="com.example.aimhustermap.NavigateActivity"/>
         <activity
             android:name="com.example.aimhustermap.TroubleActivity"/>
-        <meta-data android:value="5200ce3156240b4f2401160d" android:name="UMENG_APPKEY"></meta-data>
+        <meta-data android:value="52137b6e56240b74e407db98" android:name="UMENG_APPKEY"></meta-data>
         <meta-data android:value="Channel ID" android:name="UMENG_CHANNEL"/>
          <service
             android:name="com.baidu.location.f"
