@@ -14,5 +14,10 @@ public class RoutePlanResult {
 		this.passedNodeIDs = passedNodeIDs;
 		this.distance = distance;
 	}
+	
+	public double getDistance()
+	{
+		return this.distance;
+	}
 
 }

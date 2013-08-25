@@ -95,6 +95,7 @@ public class FenleiAdapter extends BaseAdapter {
              }
              else {
 				viewHolder.docallBtn.setBackgroundResource(R.drawable.docall_blank);
+				viewHolder.docallBtn.setEnabled(false);
 			}
             LinearLayout.LayoutParams mParams = new LinearLayout.LayoutParams(  
                     LinearLayout.LayoutParams.WRAP_CONTENT,  

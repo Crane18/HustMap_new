@@ -48,6 +48,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.RelativeLayout.LayoutParams;
+
 import com.baidu.location.BDLocation;
 import com.baidu.location.BDLocationListener;
 import com.baidu.location.LocationClient;
@@ -64,6 +65,8 @@ import com.baidu.mapapi.map.MapPoi;
 import com.baidu.mapapi.map.MapView;
 import com.baidu.mapapi.map.MyLocationOverlay;
 import com.baidu.mapapi.map.OverlayItem;
+import com.baidu.mapapi.map.PopupClickListener;
+import com.baidu.mapapi.map.PopupOverlay;
 import com.baidu.mapapi.map.RouteOverlay;
 import com.baidu.mapapi.map.Symbol;
 import com.baidu.mapapi.map.TextItem;
@@ -74,7 +77,6 @@ import com.example.aimhustermap.adapter.No_addressAdapter;
 import com.example.aimhustermap.db.DatabaseHust;
 import com.example.aimhustermap.db.DatabaseSearcher;
 import com.example.aimhustermap.map.MapManager;
-import com.example.aimhustermap.route.Edge;
 import com.example.aimhustermap.route.Node;
 import com.example.aimhustermap.route.RoutePlanResult;
 import com.example.aimhustermap.route.RoutePlanner;
@@ -84,9 +86,17 @@ import com.umeng.update.UmengUpdateAgent;
 @SuppressLint("HandlerLeak")
 public class HusterMain extends Activity {
 	
-	public ArrayList<Node> nodeList;
+//	public ArrayList<Node> nodeList;
 	RoutePlanner planner;
-	public RouteOverlay routeOverlay;
+	public MyRouteOverlay routeOverlay;
+	
+	private PopupOverlay pop = null;
+	private TextView  popupText = null;
+	private View viewCache = null;
+	private View popupInfo = null;
+	private View popupLeft = null;
+	private View popupRight = null;
+	
 	//获取手机屏幕分辨率的类  
     private DisplayMetrics metrics = new DisplayMetrics();
     int fontSize;//标记文字字体大小
@@ -221,6 +231,13 @@ public class HusterMain extends Activity {
          */
         mMapController.setZoom(15);
         
+        
+        viewCache = getLayoutInflater().inflate(R.layout.custom_text_view, null);
+        popupInfo = (View) viewCache.findViewById(R.id.popinfo);
+        popupLeft = (View) viewCache.findViewById(R.id.popleft);
+        popupRight = (View) viewCache.findViewById(R.id.popright);
+        popupText =(TextView) viewCache.findViewById(R.id.textcache);
+        
         //地图内置缩放控件
        // mMapView.setBuiltInZoomControls(true);
         
@@ -241,18 +258,20 @@ public class HusterMain extends Activity {
 		drawable[8]=res.getDrawable(R.drawable.icon_marki);
 		drawable[9]=res.getDrawable(R.drawable.icon_markj);
 		
-		 nodeList = new ArrayList<Node>();
+//		 nodeList = new ArrayList<Node>();
 		
 		final GeoPoint point1 = new GeoPoint(30519978,114437019);
 		GeoPoint point2 = new GeoPoint(30520086,114436224);
 		final GeoPoint point3 = new GeoPoint(30520184,114435605);
 		GeoPoint point4 = new GeoPoint(30520425,114433925);
 		GeoPoint point5 = new GeoPoint(30520530,114433193);
-		GeoPoint point6 = new GeoPoint(30519943,114433759);
+		final GeoPoint point6 = new GeoPoint(30519943,114433759);
 		final GeoPoint point7 = new GeoPoint(30519826,114434459);
-		GeoPoint point8 = new GeoPoint(30519577,114434450);
+		final GeoPoint point8 = new GeoPoint(30519577,114434450);
 		GeoPoint point9 = new GeoPoint(30519701,114435160);
 		final GeoPoint point10 = new GeoPoint(30519725,114435946);
+		
+		
 		
 		Node node1 = new Node(point1);
 		Node node2 = new Node(point2);
@@ -264,6 +283,32 @@ public class HusterMain extends Activity {
 		Node node8 = new Node(point8);
 		Node node9 = new Node(point9);
 		Node node10 = new Node(point10);
+		
+		node1.getChildNodes().add(node2);
+		node2.getChildNodes().add(node1);
+		node2.getChildNodes().add(node3);
+		node2.getChildNodes().add(node10);
+		node3.getChildNodes().add(node2);
+		node3.getChildNodes().add(node4);
+		node3.getChildNodes().add(node7);
+		node4.getChildNodes().add(node3);
+		node4.getChildNodes().add(node5);
+		node4.getChildNodes().add(node6);
+		node5.getChildNodes().add(node4);
+		node6.getChildNodes().add(node4);
+		node6.getChildNodes().add(node7);
+		node7.getChildNodes().add(node6);
+		node7.getChildNodes().add(node3);
+		node7.getChildNodes().add(node8);
+		node8.getChildNodes().add(node7);
+		node8.getChildNodes().add(node9);
+		node9.getChildNodes().add(node8);
+		node9.getChildNodes().add(node10);
+		node10.getChildNodes().add(node9);
+		node10.getChildNodes().add(node2);
+		
+	final	ArrayList<Node> nodeList =new ArrayList<Node>();
+		
 		nodeList.add(node1);
 		nodeList.add(node2);
 		nodeList.add(node3);
@@ -274,56 +319,56 @@ public class HusterMain extends Activity {
 		nodeList.add(node8);
 		nodeList.add(node9);
 		nodeList.add(node10);
-		
-		Edge edge1 = new Edge(point1, point2, 5);
-		Edge edge2 = new Edge(point2, point1, 5);
-		Edge edge3 = new Edge(point2, point3, 10);
-		Edge edge4 = new Edge(point3, point2, 10);
-		Edge edge5 = new Edge(point3, point4, 13);
-		Edge edge6 = new Edge(point4, point3, 13);
-		Edge edge7 = new Edge(point4, point5, 2);
-		Edge edge8 = new Edge(point5, point4, 2);
-		Edge edge9 = new Edge(point4, point6, 4);
-		Edge edge10 = new Edge(point6, point4, 4);
-		Edge edge11 = new Edge(point6, point7, 3);
-		Edge edge12 = new Edge(point7, point6, 3);
-		Edge edge13 = new Edge(point7, point3, 7);
-		Edge edge14 = new Edge(point3, point7, 7);
-		Edge edge15 = new Edge(point7, point8, 1);
-		Edge edge16 = new Edge(point8, point7, 1);
-		Edge edge17 = new Edge(point8, point9, 5);
-		Edge edge18 = new Edge(point9, point8, 5);
-		Edge edge19 = new Edge(point9, point10, 2);
-		Edge edge20 = new Edge(point10, point9, 2);
-		Edge edge21 = new Edge(point2, point10, 8);
-		Edge edge22 = new Edge(point10, point2, 8);
-		
-		node1.getEdgeList().add(edge1);
-		node2.getEdgeList().add(edge2);
-		node2.getEdgeList().add(edge3);
-		node2.getEdgeList().add(edge21);
-		node3.getEdgeList().add(edge4);
-		node3.getEdgeList().add(edge5);
-		node3.getEdgeList().add(edge14);
-		node4.getEdgeList().add(edge6);
-		node4.getEdgeList().add(edge7);
-		node4.getEdgeList().add(edge9);
-		node5.getEdgeList().add(edge8);
-		node6.getEdgeList().add(edge10);
-		node6.getEdgeList().add(edge11);
-		node7.getEdgeList().add(edge12);
-		node7.getEdgeList().add(edge13);
-		node7.getEdgeList().add(edge15);
-		node8.getEdgeList().add(edge17);
-		node8.getEdgeList().add(edge16);
-		node9.getEdgeList().add(edge18);
-		node9.getEdgeList().add(edge19);
-		node10.getEdgeList().add(edge20);
-		node10.getEdgeList().add(edge22);
-		
+//		
+//		Edge edge1 = new Edge(point1, point2, 5);
+//		Edge edge2 = new Edge(point2, point1, 5);
+//		Edge edge3 = new Edge(point2, point3, 10);
+//		Edge edge4 = new Edge(point3, point2, 10);
+//		Edge edge5 = new Edge(point3, point4, 13);
+//		Edge edge6 = new Edge(point4, point3, 13);
+//		Edge edge7 = new Edge(point4, point5, 2);
+//		Edge edge8 = new Edge(point5, point4, 2);
+//		Edge edge9 = new Edge(point4, point6, 4);
+//		Edge edge10 = new Edge(point6, point4, 4);
+//		Edge edge11 = new Edge(point6, point7, 3);
+//		Edge edge12 = new Edge(point7, point6, 3);
+//		Edge edge13 = new Edge(point7, point3, 7);
+//		Edge edge14 = new Edge(point3, point7, 7);
+//		Edge edge15 = new Edge(point7, point8, 1);
+//		Edge edge16 = new Edge(point8, point7, 1);
+//		Edge edge17 = new Edge(point8, point9, 5);
+//		Edge edge18 = new Edge(point9, point8, 5);
+//		Edge edge19 = new Edge(point9, point10, 2);
+//		Edge edge20 = new Edge(point10, point9, 2);
+//		Edge edge21 = new Edge(point2, point10, 8);
+//		Edge edge22 = new Edge(point10, point2, 8);
+//		
+//		node1.getEdgeList().add(edge1);
+//		node2.getEdgeList().add(edge2);
+//		node2.getEdgeList().add(edge3);
+//		node2.getEdgeList().add(edge21);
+//		node3.getEdgeList().add(edge4);
+//		node3.getEdgeList().add(edge5);
+//		node3.getEdgeList().add(edge14);
+//		node4.getEdgeList().add(edge6);
+//		node4.getEdgeList().add(edge7);
+//		node4.getEdgeList().add(edge9);
+//		node5.getEdgeList().add(edge8);
+//		node6.getEdgeList().add(edge10);
+//		node6.getEdgeList().add(edge11);
+//		node7.getEdgeList().add(edge12);
+//		node7.getEdgeList().add(edge13);
+//		node7.getEdgeList().add(edge15);
+//		node8.getEdgeList().add(edge17);
+//		node8.getEdgeList().add(edge16);
+//		node9.getEdgeList().add(edge18);
+//		node9.getEdgeList().add(edge19);
+//		node10.getEdgeList().add(edge20);
+//		node10.getEdgeList().add(edge22);
+//		
 		final MKRoute route = new MKRoute();
-	    routeOverlay = new RouteOverlay(HusterMain.this, mMapView);
-		planner = new RoutePlanner();
+	    routeOverlay = new MyRouteOverlay(HusterMain.this, mMapView);
+//		planner = new RoutePlanner();
 		
         
         poi_nameStrings=getResources().getStringArray(R.array.poi_name);
@@ -391,8 +436,25 @@ public class HusterMain extends Activity {
        autoLocation();//初始化时自动定位，定位不成功，则设置中心点为华科南大门
        GeoPoint point_1=new GeoPoint(30513441,114419896); 
        mMapController.setCenter(point_1);
+       
 
-			
+       /**
+        * 创建一个popupoverlay
+        */
+       PopupClickListener popListener = new PopupClickListener(){
+			@Override
+			public void onClickedPopup(int index) {
+				if ( index == 0){
+					//更新item位置
+				     
+				}
+				else if(index == 2){
+					//更新图标
+					
+				}
+			}
+       };
+       pop = new PopupOverlay(mMapView,popListener);	
 		    
         /*地图监听事件
          * */
@@ -524,17 +586,26 @@ public class HusterMain extends Activity {
 					mMapView.getOverlays().remove(routeOverlay);
 					mMapView.refresh();
 				}
-				RoutePlanResult result = planner.plan(nodeList, point1,point7);
+//				RoutePlanResult result = planner.plan(nodeList, point1,point7);
+//				int size = result.passedNodeIDs.size();
+//				GeoPoint[] points =(GeoPoint[]) result.passedNodeIDs.toArray(new GeoPoint[size]);
+//				route.customizeRoute( point1, point7, points);
+//				routeOverlay.setData(route);
+                planner = new RoutePlanner(point1, point6, nodeList);
+				planner.start();
+				RoutePlanResult result = planner.getRoutePlanResult();
 				int size = result.passedNodeIDs.size();
-				GeoPoint[] points =(GeoPoint[]) result.passedNodeIDs.toArray(new GeoPoint[size]);
-				route.customizeRoute( point1, point7, points);
+				double distance = result.getDistance();
+			    GeoPoint[] points = (GeoPoint[])result.passedNodeIDs.toArray(new GeoPoint[size]);
+			    route.customizeRoute( point1, point6, points);
 				routeOverlay.setData(route);
-
 				mMapView.getOverlays().add(routeOverlay);
 				mMapView.refresh();
+				Toast.makeText(HusterMain.this,String.valueOf((int)distance), Toast.LENGTH_SHORT).show();
 				 // 使用zoomToSpan()绽放地图，使路线能完全显示在地图上
 			    mMapView.getController().zoomToSpan(routeOverlay.getLatSpanE6(), routeOverlay.getLonSpanE6());
-			    mMapController.animateTo(routeOverlay.getCenter());
+//			    mMapController.animateTo(routeOverlay.getCenter());
+			    routeOverlay.animateTo();
 			}
 		});
 	
@@ -894,16 +965,16 @@ public class HusterMain extends Activity {
 		touchY = event.getY();
 		
 		float top;
-		float bottom;
+//		float bottom;
 		float right;
 		ViewUtil mViewUtil = new ViewUtil(classifyButton);
 		top = mViewUtil.getTop();
-		bottom = mViewUtil.getBottom();
+//		bottom = mViewUtil.getBottom();
 		right = mViewUtil.getRight();
-		System.out.println("---------->top= "+top+"  bottom="+bottom+"   height="+(bottom-top));
-		int screenHeight;
-		screenHeight = metrics.heightPixels;
-		System.out.println("----------->X="+touchX+"  Y="+touchY+"  screenHeight="+screenHeight);
+//		System.out.println("---------->top= "+top+"  bottom="+bottom+"   height="+(bottom-top));
+//		int screenHeight;
+//		screenHeight = metrics.heightPixels;
+//		System.out.println("----------->X="+touchX+"  Y="+touchY+"  screenHeight="+screenHeight);
 		
 		if(layout.isShown())
 		{
@@ -997,6 +1068,22 @@ public class HusterMain extends Activity {
 		Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse("tel:"  
               + phoneNum)); 
      	HusterMain.this.startActivity(intent);
+	}
+	
+	
+	public class MyRouteOverlay extends RouteOverlay
+	{
+		public MyRouteOverlay(Activity activity,MapView mMapView)
+		{
+			super(activity, mMapView);
+		}
+		
+		@Override
+		protected boolean onTap(int index)
+		{
+			Toast.makeText(HusterMain.this, String.valueOf(index), Toast.LENGTH_SHORT).show();
+			return true;
+		}
 	}
 
    /* 

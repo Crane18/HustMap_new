@@ -2,6 +2,7 @@ package com.example.aimhustermap.adapter;
 
 import java.util.List;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.util.Log;
 import android.view.Gravity;
@@ -52,7 +53,8 @@ public class ShowDetailAdapter extends BaseAdapter {
         ImageButton docallBtn;  
     }  
   
-    @Override  
+    @SuppressLint("NewApi")
+	@Override  
     public View getView(int position, View convertView, ViewGroup parent) {  
         final DatabaseHust databaseHust = (DatabaseHust)getItem(position);  
         ViewHolder viewHolder = null;
@@ -78,6 +80,7 @@ public class ShowDetailAdapter extends BaseAdapter {
             }
             else {
 				viewHolder.docallBtn.setBackgroundResource(R.drawable.docall_blank);
+				viewHolder.docallBtn.setEnabled(false);
 			}
             LinearLayout.LayoutParams mParams = new LinearLayout.LayoutParams(  
                     LinearLayout.LayoutParams.WRAP_CONTENT,  
