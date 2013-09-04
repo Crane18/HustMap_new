@@ -1,5 +1,7 @@
 package com.example.aimhustermap;
 
+import com.example.aimhustermap.R;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -17,7 +19,7 @@ public class Lanucher_Activity extends Activity{
 	private static final int GO_HOME = 1000;
 	private static final int GO_GUIDE = 1001;
 	// 延迟3秒
-	private static final long SPLASH_DELAY_MILLIS = 1500;
+	private static final long SPLASH_DELAY_MILLIS = 800;
 
 	private static final String SHAREDPREFERENCES_NAME = "first_pref";
 

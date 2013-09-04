@@ -1,5 +1,6 @@
 package com.example.aimhustermap;
 
+import com.example.aimhustermap.R;
 import com.example.aimhustermap.thread.SleepThread;
 import com.umeng.analytics.MobclickAgent;
 

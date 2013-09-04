@@ -1,14 +1,18 @@
 package com.example.aimhustermap;
 
+import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import android.R.integer;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.LabeledIntent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -25,14 +29,17 @@ import android.provider.Contacts;
 import android.text.ClipboardManager;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.text.format.Time;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.InputMethodManager;
@@ -56,6 +63,7 @@ import com.baidu.location.LocationClientOption;
 import com.baidu.mapapi.BMapManager;
 import com.baidu.mapapi.map.ItemizedOverlay;
 import com.baidu.mapapi.map.LocationData;
+import com.baidu.mapapi.map.MKMapTouchListener;
 import com.baidu.mapapi.map.MKMapViewListener;
 import com.baidu.mapapi.map.MKOLUpdateElement;
 import com.baidu.mapapi.map.MKOfflineMap;
@@ -73,22 +81,44 @@ import com.baidu.mapapi.map.TextItem;
 import com.baidu.mapapi.map.TextOverlay;
 import com.baidu.mapapi.search.MKRoute;
 import com.baidu.platform.comapi.basestruct.GeoPoint;
+import com.example.aimhustermap.R;
 import com.example.aimhustermap.adapter.No_addressAdapter;
+import com.example.aimhustermap.db.DBRouteNode;
+import com.example.aimhustermap.db.DBRouteSearcher;
 import com.example.aimhustermap.db.DatabaseHust;
 import com.example.aimhustermap.db.DatabaseSearcher;
 import com.example.aimhustermap.map.MapManager;
 import com.example.aimhustermap.route.Node;
 import com.example.aimhustermap.route.RoutePlanResult;
 import com.example.aimhustermap.route.RoutePlanner;
+import com.example.aimhustermap.util.BMapUtil;
+import com.example.aimhustermap.util.ViewUtil;
 import com.umeng.update.UmengUpdateAgent;
 
 
 @SuppressLint("HandlerLeak")
 public class HusterMain extends Activity {
 	
-//	public ArrayList<Node> nodeList;
+	public String fenleiString = null;//记录所选的分类类别
+	public GeoPoint clickPoint = null;
+	//地图区域边界
+	static int Awedge = 114414894;
+	static int Aeedge = 114423949;
+	static int Asedge = 30512946;
+	static int Anedge = 30515357;
+	
+	static int Bwedge = 114433930;
+	static int Beedge = 114441399;
+	static int Bsedge = 30511352;
+	static int Bnedge = 30515871;
+	
+	static int EWBorder = 114431917;
+	static int EWBorder1 = 114428513;
+	
 	RoutePlanner planner;
 	public MyRouteOverlay routeOverlay;
+	private MKRoute route = null;
+	private ArrayList<Node> nodeList = null;
 	
 	private PopupOverlay pop = null;
 	private TextView  popupText = null;
@@ -96,6 +126,7 @@ public class HusterMain extends Activity {
 	private View popupInfo = null;
 	private View popupLeft = null;
 	private View popupRight = null;
+	private OverlayItem  mCurItem = null;
 	
 	//获取手机屏幕分辨率的类  
     private DisplayMetrics metrics = new DisplayMetrics();
@@ -130,29 +161,29 @@ public class HusterMain extends Activity {
 	static double DEF_PI180= 0.01745329252; // PI/180.0
 	static double DEF_R =6370693.5; // radius of earth
 	
-	        // 定位相关
-			LocationClient mLocClient;
-			LocationData locData = null;
-			EditText editSearch;
+	// 定位相关
+	LocationClient mLocClient;
+	LocationData locData = null;
+	EditText editSearch;
 			
-			ArrayAdapter<String> adapter1;
-			ListView list_dropdown;//搜索提示框
-			public MyLocationListenner myListener = new MyLocationListenner();
-			Button requestLocButton = null;
-			boolean isRequest = false;//是否手动触发请求定位
-			boolean isFirstLoc = true;//是否首次定位
-			boolean locationFinish=false;
-			boolean isLocationClientStop = false;
-			//定位图层
-			MyLocationOverlay myLocationOverlay = null;
-            private Button searchButton=null;
-            private Button classifyButton=null;
-            private Button locButton=null;
-            private Button settingButton=null;
-            private ImageButton showButton=null;
-            private LinearLayout layout;//下面菜单栏
-            @SuppressLint("HandlerLeak")
-			private  Handler handler  =new Handler()
+	ArrayAdapter<String> adapter1;
+	ListView list_dropdown;//搜索提示框
+	public MyLocationListenner myListener = new MyLocationListenner();
+	Button requestLocButton = null;
+	boolean isRequest = false;//是否手动触发请求定位
+	boolean isFirstLoc = true;//是否首次定位
+	boolean locationFinish=false;
+	boolean isLocationClientStop = false;
+	//定位图层
+	MyLocationOverlay myLocationOverlay = null;
+    private Button searchButton=null;
+    private Button classifyButton=null;
+    private Button locButton=null;
+    private Button settingButton=null;
+    private ImageButton showButton=null;
+    private LinearLayout layout;//下面菜单栏
+    @SuppressLint("HandlerLeak")
+	private  Handler handler  =new Handler()
             {
          	   @Override
          	   public void handleMessage(Message msg)
@@ -161,10 +192,29 @@ public class HusterMain extends Activity {
          		   if (msg.what==2) {
          			   Toast.makeText(HusterMain.this, "不在武汉市或定位不成功，开启GPS或网络！", Toast.LENGTH_SHORT).show();					
 				}
+         		   if (msg.what == 0) {
+         			  if(!mItems.isEmpty())
+      				   {
+      					  clearOverlay();
+      					  OverlayItem item= new OverlayItem(clickPoint, "", "");
+      					  mCurItem = item;
+      					  mOverlay.addItem(mItems);
+      					  Bitmap[] bitMaps={
+      							        BMapUtil.getBitmapFromView(popupLeft), 		
+//      							    BMapUtil.getBitmapFromView(popupInfo), 		
+      							        BMapUtil.getBitmapFromView(popupRight) 		
+      						    };
+      				      pop.showPopup(bitMaps,item.getPoint(),48);
+      					  mMapView.getOverlays().add(mOverlay);
+      					  mMapView.refresh();
+//      					  mMapController.setZoom(17);
+      					  mItems.clear();
+      				 }
+				}
          	   }
             };
-            private Timer timer =new Timer();
-            DatabaseSearcher mySearcher ;
+    private Timer timer =new Timer();
+    private DatabaseSearcher mySearcher ;
 	private MapView mMapView = null;
 	private MyOverlay  mOverlay = null;
 	MKOfflineMap mOffline = null;//离线地图相关
@@ -177,6 +227,18 @@ public class HusterMain extends Activity {
 	 *  MKMapViewListener 用于处理地图事件回调
 	 */
 	MKMapViewListener mMapListener = null;
+	MKMapTouchListener mapTouchListener = null; 
+	/**
+	 * 当前地点击点
+	 */
+	private GeoPoint currentPt = null; 
+	
+	/*
+	 * 路线搜索相关
+	 * */
+	public List<DBRouteNode>  DBnodesList = null;
+	public DBRouteSearcher myRouteSearcher = null;
+	public ArrayList<Node> lableNodes = new ArrayList<Node>();
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -229,17 +291,22 @@ public class HusterMain extends Activity {
         /**
          * 设置地图缩放级别
          */
-        mMapController.setZoom(15);
+        mMapController.setZoom(16);
+        
+//        mMapView.setSatellite(true);
+        
         
         
         viewCache = getLayoutInflater().inflate(R.layout.custom_text_view, null);
-        popupInfo = (View) viewCache.findViewById(R.id.popinfo);
+//        popupInfo = (View) viewCache.findViewById(R.id.popinfo);
         popupLeft = (View) viewCache.findViewById(R.id.popleft);
         popupRight = (View) viewCache.findViewById(R.id.popright);
-        popupText =(TextView) viewCache.findViewById(R.id.textcache);
+//        popupText =(TextView) viewCache.findViewById(R.id.textcache);
         
         //地图内置缩放控件
        // mMapView.setBuiltInZoomControls(true);
+        
+      
         
         mOverlay = new MyOverlay(getResources().getDrawable(R.drawable.icon_marka),mMapView);
 		mLocClient = new LocationClient( this );
@@ -258,117 +325,9 @@ public class HusterMain extends Activity {
 		drawable[8]=res.getDrawable(R.drawable.icon_marki);
 		drawable[9]=res.getDrawable(R.drawable.icon_markj);
 		
-//		 nodeList = new ArrayList<Node>();
-		
-		final GeoPoint point1 = new GeoPoint(30519978,114437019);
-		GeoPoint point2 = new GeoPoint(30520086,114436224);
-		final GeoPoint point3 = new GeoPoint(30520184,114435605);
-		GeoPoint point4 = new GeoPoint(30520425,114433925);
-		GeoPoint point5 = new GeoPoint(30520530,114433193);
-		final GeoPoint point6 = new GeoPoint(30519943,114433759);
-		final GeoPoint point7 = new GeoPoint(30519826,114434459);
-		final GeoPoint point8 = new GeoPoint(30519577,114434450);
-		GeoPoint point9 = new GeoPoint(30519701,114435160);
-		final GeoPoint point10 = new GeoPoint(30519725,114435946);
-		
-		
-		
-		Node node1 = new Node(point1);
-		Node node2 = new Node(point2);
-		Node node3 = new Node(point3);
-		Node node4 = new Node(point4);
-		Node node5 = new Node(point5);
-		Node node6 = new Node(point6);
-		Node node7 = new Node(point7);
-		Node node8 = new Node(point8);
-		Node node9 = new Node(point9);
-		Node node10 = new Node(point10);
-		
-		node1.getChildNodes().add(node2);
-		node2.getChildNodes().add(node1);
-		node2.getChildNodes().add(node3);
-		node2.getChildNodes().add(node10);
-		node3.getChildNodes().add(node2);
-		node3.getChildNodes().add(node4);
-		node3.getChildNodes().add(node7);
-		node4.getChildNodes().add(node3);
-		node4.getChildNodes().add(node5);
-		node4.getChildNodes().add(node6);
-		node5.getChildNodes().add(node4);
-		node6.getChildNodes().add(node4);
-		node6.getChildNodes().add(node7);
-		node7.getChildNodes().add(node6);
-		node7.getChildNodes().add(node3);
-		node7.getChildNodes().add(node8);
-		node8.getChildNodes().add(node7);
-		node8.getChildNodes().add(node9);
-		node9.getChildNodes().add(node8);
-		node9.getChildNodes().add(node10);
-		node10.getChildNodes().add(node9);
-		node10.getChildNodes().add(node2);
-		
-	final	ArrayList<Node> nodeList =new ArrayList<Node>();
-		
-		nodeList.add(node1);
-		nodeList.add(node2);
-		nodeList.add(node3);
-		nodeList.add(node4);
-		nodeList.add(node5);
-		nodeList.add(node6);
-		nodeList.add(node7);
-		nodeList.add(node8);
-		nodeList.add(node9);
-		nodeList.add(node10);
-//		
-//		Edge edge1 = new Edge(point1, point2, 5);
-//		Edge edge2 = new Edge(point2, point1, 5);
-//		Edge edge3 = new Edge(point2, point3, 10);
-//		Edge edge4 = new Edge(point3, point2, 10);
-//		Edge edge5 = new Edge(point3, point4, 13);
-//		Edge edge6 = new Edge(point4, point3, 13);
-//		Edge edge7 = new Edge(point4, point5, 2);
-//		Edge edge8 = new Edge(point5, point4, 2);
-//		Edge edge9 = new Edge(point4, point6, 4);
-//		Edge edge10 = new Edge(point6, point4, 4);
-//		Edge edge11 = new Edge(point6, point7, 3);
-//		Edge edge12 = new Edge(point7, point6, 3);
-//		Edge edge13 = new Edge(point7, point3, 7);
-//		Edge edge14 = new Edge(point3, point7, 7);
-//		Edge edge15 = new Edge(point7, point8, 1);
-//		Edge edge16 = new Edge(point8, point7, 1);
-//		Edge edge17 = new Edge(point8, point9, 5);
-//		Edge edge18 = new Edge(point9, point8, 5);
-//		Edge edge19 = new Edge(point9, point10, 2);
-//		Edge edge20 = new Edge(point10, point9, 2);
-//		Edge edge21 = new Edge(point2, point10, 8);
-//		Edge edge22 = new Edge(point10, point2, 8);
-//		
-//		node1.getEdgeList().add(edge1);
-//		node2.getEdgeList().add(edge2);
-//		node2.getEdgeList().add(edge3);
-//		node2.getEdgeList().add(edge21);
-//		node3.getEdgeList().add(edge4);
-//		node3.getEdgeList().add(edge5);
-//		node3.getEdgeList().add(edge14);
-//		node4.getEdgeList().add(edge6);
-//		node4.getEdgeList().add(edge7);
-//		node4.getEdgeList().add(edge9);
-//		node5.getEdgeList().add(edge8);
-//		node6.getEdgeList().add(edge10);
-//		node6.getEdgeList().add(edge11);
-//		node7.getEdgeList().add(edge12);
-//		node7.getEdgeList().add(edge13);
-//		node7.getEdgeList().add(edge15);
-//		node8.getEdgeList().add(edge17);
-//		node8.getEdgeList().add(edge16);
-//		node9.getEdgeList().add(edge18);
-//		node9.getEdgeList().add(edge19);
-//		node10.getEdgeList().add(edge20);
-//		node10.getEdgeList().add(edge22);
-//		
-		final MKRoute route = new MKRoute();
+
+	    route = new MKRoute();
 	    routeOverlay = new MyRouteOverlay(HusterMain.this, mMapView);
-//		planner = new RoutePlanner();
 		
         
         poi_nameStrings=getResources().getStringArray(R.array.poi_name);
@@ -379,14 +338,14 @@ public class HusterMain extends Activity {
         	{
         		GeoPoint point = new GeoPoint(lat[i], lon[i]);
         		GeoPoint point_2 = new GeoPoint(lat[i], lon[i]+230);
-    			OverlayItem item = new OverlayItem(point, "", poi_nameStrings[i]);
+    			OverlayItem item = new OverlayItem(point, poi_nameStrings[i],"" );
     			mTextOverlay.addText(DrawText(point_2,poi_nameStrings[i],fontSize));
     			lableOverlay.addItem(item);
     			poi_points.add(point);
         	}
         	else {
         		GeoPoint point = new GeoPoint(lat[i], lon[i]);
-    			OverlayItem item = new OverlayItem(point, "", poi_nameStrings[i]);
+    			OverlayItem item = new OverlayItem(point,poi_nameStrings[i], "");
     			mTextOverlay.addText(DrawText(point,poi_nameStrings[i],fontSize));
     			lableOverlay.addItem(item);
     			poi_points.add(point);
@@ -432,6 +391,55 @@ public class HusterMain extends Activity {
         int num=mOffline.scan();//导入离线地图
         
         mySearcher = new DatabaseSearcher(HusterMain.this);
+        
+       //实例化地图节点 
+        myRouteSearcher = new DBRouteSearcher(HusterMain.this);
+        DBnodesList = myRouteSearcher.selectNode();
+        nodeList = new ArrayList<Node>();
+        for (int i = 0; i < DBnodesList.size(); i++) {
+			Node node1 = new Node(DBnodesList.get(i).node);
+			nodeList.add(node1);
+		}
+        
+        for (int i = 0; i < nodeList.size(); i++) {
+			for (int j = 0; j < DBnodesList.get(i).nodeChildren.size(); j++) {
+				nodeList.get(i).getChildNodes().add(nodeList.get(DBnodesList.get(i).nodeChildren.get(j)-1));
+			}
+		}
+        
+        GeoPoint point1 = new GeoPoint(30520985,114428513);
+        GeoPoint point2 = new GeoPoint(30521055,114427780);
+        GeoPoint point3 = new GeoPoint(30521152,114426756);
+        GeoPoint point4 = new GeoPoint(30521432,114424084);
+        GeoPoint point5 = new GeoPoint(30521634,114421596);
+        GeoPoint point6 = new GeoPoint(30521848,114419503);
+        GeoPoint point7 = new GeoPoint(30522023,114417657);
+        GeoPoint point8 = new GeoPoint(30522202,114415779);
+//        GeoPoint point9 = new GeoPoint(30520191,114435609);
+//        GeoPoint point10 = new GeoPoint(30520580,114432905);
+//        GeoPoint point11 = new GeoPoint(30520736,114431225);
+//        GeoPoint point12 = new GeoPoint(30520806,114430579);
+//        GeoPoint point13 = new GeoPoint(30520891,114429407);
+        ArrayList<GeoPoint> points = new ArrayList<GeoPoint>();
+        points.add(point1);
+        points.add(point2);
+        points.add(point3);
+        points.add(point4);
+        points.add(point5);
+        points.add(point6);
+        points.add(point7);
+        points.add(point8);
+//        points.add(point9);
+//        points.add(point10);
+//        points.add(point11);
+//        points.add(point12);
+//        points.add(point13);
+//        int temp = 0;
+        for (int i = 0; i < points.size(); i++) {
+        	lableNodes.add(findnearestNode(points.get(i), nodeList));
+		}
+        
+        
 		
        autoLocation();//初始化时自动定位，定位不成功，则设置中心点为华科南大门
        GeoPoint point_1=new GeoPoint(30513441,114419896); 
@@ -441,20 +449,127 @@ public class HusterMain extends Activity {
        /**
         * 创建一个popupoverlay
         */
-       PopupClickListener popListener = new PopupClickListener(){
+        PopupClickListener popListener = new PopupClickListener(){
+			@SuppressLint("NewApi")
 			@Override
 			public void onClickedPopup(int index) {
 				if ( index == 0){
-					//更新item位置
-				     
+				
+		    		mySearcher=new DatabaseSearcher(HusterMain.this);
+		    		List<DatabaseHust>  databaseHusts=new ArrayList<DatabaseHust>();
+		    		databaseHusts=mySearcher.search(mCurItem.getPoint());
+		    		System.out.println("------------------>dataSize:"+databaseHusts.size());
+		    		boolean hasDetail=false;
+		    		if(!databaseHusts.isEmpty()){
+		                
+		    			for (int i = 0; i < databaseHusts.size(); i++) {
+							if(!databaseHusts.get(i).buildingName.equals(databaseHusts.get(i).officeNanme) )
+							{
+								hasDetail=true;
+								break;
+							}
+						}
+		    			
+		    			if(!hasDetail||(databaseHusts.size()==1&&databaseHusts.get(0).officePhone.isEmpty()))
+		    			{
+		    				Toast.makeText(HusterMain.this, databaseHusts.get(0).buildingName, Toast.LENGTH_SHORT).show();
+		    				mMapController.animateTo(mCurItem.getPoint());
+		    				
+		    			}
+		    			else {
+
+		    				Intent intent=new Intent(HusterMain.this,ShowDetail_Activity.class);
+		        			intent.putExtra("x", mCurItem.getPoint().getLongitudeE6());
+		        			intent.putExtra("y", mCurItem.getPoint().getLatitudeE6());
+		        			startActivity(intent);
+						}		
+		    		
+		    		}
+		    		
+		    		else{
+
+		    			Toast.makeText(HusterMain.this, mCurItem.getTitle(), Toast.LENGTH_SHORT).show();
+		    			mMapController.animateTo(mCurItem.getPoint());
+		    		
+		    		}
 				}
-				else if(index == 2){
-					//更新图标
+				else if(index == 1){
+						if (routeOverlay != null) {
+							mMapView.getOverlays().remove(routeOverlay);
+							mMapView.refresh();
+						}	
+						
+//					showRouteSearchPopupWindow();
+					if (locationFinish) {
+						
+						double distance = Double.MAX_VALUE;
+						double lat = locData.latitude;
+						double lon = locData.longitude;
+						ArrayList<GeoPoint>  passedPoints = new ArrayList<GeoPoint>();
+						GeoPoint locGeoPoint = new GeoPoint((int)(lat * 1E6), (int)(lon * 1E6));
+//						GeoPoint transitonPoint = new GeoPoint(arg0, arg1)
+						Node startNode = PointToNode(locGeoPoint, nodeList, mCurItem.getPoint());
+						Node endNode = PointToNode(mCurItem.getPoint(), nodeList, locGeoPoint);
+
+						Node tempNode = getTransitionNode(startNode, endNode);
+						System.out.println(" --------> startNode = "+startNode.getPointID()+"\n -------> endNode = "+endNode.getPointID());
+						System.out.println(" nodeList.Size = "+nodeList.size());
+						if (tempNode != null) {
+							planner = new RoutePlanner(startNode,tempNode,nodeList);
+							RoutePlanResult result1 = planner.getRoutePlanResult();
+							planner = new RoutePlanner(tempNode, endNode, nodeList);
+							RoutePlanResult result2 = planner.getRoutePlanResult();
+							for (int i = 0; i < result1.passedNodeIDs.size(); i++) {
+								passedPoints.add(result1.passedNodeIDs.get(i));
+							}
+							for (int i = 0; i < result2.passedNodeIDs.size(); i++) {
+								passedPoints.add(result2.passedNodeIDs.get(i));
+							}
+							distance = result1.getDistance() + result2.getDistance();
+						}
+						else {
+							planner = new RoutePlanner(startNode,endNode, nodeList);
+			                RoutePlanResult result = planner.getRoutePlanResult();
+			                distance = result.getDistance();
+			                for (int i = 0; i < result.passedNodeIDs.size(); i++) {
+								passedPoints.add(result.passedNodeIDs.get(i));
+							}
+						}
+						
+						int size = passedPoints.size();
+		                if(size > 1)
+		                {
+		    			    GeoPoint[] points = (GeoPoint[])passedPoints.toArray(new GeoPoint[size]);
+		    			    route.customizeRoute( locGeoPoint, mCurItem.getPoint(), points);
+		    				routeOverlay.setData(route);
+		    				mMapView.getOverlays().add(routeOverlay);
+		    				mMapView.refresh();
+		    				Toast.makeText(HusterMain.this,"全程"+String.valueOf((int)distance)+"米", Toast.LENGTH_SHORT).show();
+		    				 // 使用zoomToSpan()绽放地图，使路线能完全显示在地图上
+		    			    mMapView.getController().zoomToSpan(routeOverlay.getLatSpanE6(), routeOverlay.getLonSpanE6());
+		    			   
+		    			    clearLable();
+		    			    if (mOverlay != null) {
+								mMapView.getOverlays().remove(mOverlay);
+								mMapView.refresh();
+							}
+		    			    mMapController.animateTo(getTheCenter(locGeoPoint, mCurItem.getPoint()));
+		                }
+		                else {
+							Toast.makeText(HusterMain.this, "抱歉，未找到路径！", Toast.LENGTH_SHORT).show();
+						}
+						
+					}
 					
+					else {
+						Toast.makeText(HusterMain.this, "请先定位确定起始点！", Toast.LENGTH_SHORT).show();
+					}
+				    pop.hidePop();
+					mMapView.refresh();
 				}
 			}
        };
-       pop = new PopupOverlay(mMapView,popListener);	
+        pop = new PopupOverlay(mMapView,popListener);	
 		    
         /*地图监听事件
          * */
@@ -502,48 +617,26 @@ public class HusterMain extends Activity {
 					 layout_dismiss();
 					
 				}
+				if(mOverlay != null)
+				{
+					mMapView.getOverlays().remove(mOverlay);
+					mMapView.refresh();
+				}
 			    GeoPoint p=null; 
 				if (mapPoiInfo != null){
 					p=mapPoiInfo.geoPt;
-//					System.out.println("------------->ClickItem:"+"lat="+String.valueOf(p.getLatitudeE6())+"  "+"lon="+
-//				    		String.valueOf(p.getLongitudeE6()));
-					mySearcher=new DatabaseSearcher(HusterMain.this);
-		    		List<DatabaseHust>  databaseHusts=new ArrayList<DatabaseHust>();
-		    		databaseHusts=mySearcher.search(p);
-		    		System.out.println("------------------>hhhhhhhhhhhhhhh  dataSize:"+databaseHusts.size());
-
-		    		boolean hasDetail=false;
-		    		if(!databaseHusts.isEmpty()){
-		                
-		    			for (int i = 0; i < databaseHusts.size(); i++) {
-							if(!databaseHusts.get(i).buildingName.equals(databaseHusts.get(i).officeNanme) )
-							{
-								hasDetail=true;
-								break;
-							}
-						}
-		    			
-		    			if(!hasDetail||(databaseHusts.size()==1&&databaseHusts.get(0).officePhone.isEmpty()))
-		    			{
-		    				Toast.makeText(HusterMain.this, databaseHusts.get(0).buildingName, Toast.LENGTH_SHORT).show();
-		    				mMapController.animateTo(p);
-		    				
-		    			}
-		    			else {
-		    				Intent intent=new Intent(HusterMain.this,ShowDetail_Activity.class);
-			    			intent.putExtra("x", p.getLongitudeE6());
-			    			intent.putExtra("y", p.getLatitudeE6());
-			    			startActivity(intent);
-						}
-		    			
-		    			
-		    		
-		    		}
-		    		else{
-		    			Toast.makeText(HusterMain.this, mapPoiInfo.strText, Toast.LENGTH_SHORT).show();
-		    			
-		    		}
-					mMapController.animateTo(p);
+					
+					mCurItem = new OverlayItem(p, mapPoiInfo.strText, "");
+					
+					System.out.println("mapPoi = "+mCurItem);
+//					 popupText.setText(mapPoiInfo.strText);
+					   Bitmap[] bitMaps={
+						    BMapUtil.getBitmapFromView(popupLeft), 		
+//						    BMapUtil.getBitmapFromView(popupInfo), 		
+						    BMapUtil.getBitmapFromView(popupRight) 		
+					    };
+					    pop.showPopup(bitMaps,p,5);
+					
 				}
 			}
 
@@ -560,57 +653,100 @@ public class HusterMain extends Activity {
 				/**
 				 *  地图完成带动画的操作（如: animationTo()）后，此回调被触发
 				 */
-				if(!mItems.isEmpty())
-				{
-					OverlayItem item=mItems.get(0);
-					item.setMarker(getResources().getDrawable(R.drawable.icon_marka));
-					clearOverlay();
-					mOverlay.addItem(item);
-					mMapView.getOverlays().add(mOverlay);
-					mMapView.refresh();
-					mItems.clear();
-				}
+//				if(!mItems.isEmpty())
+//				{
+//					clearOverlay();
+//					OverlayItem item= new OverlayItem(clickPoint, "", "");
+//					mCurItem = item;
+////					item.setMarker(getResources().getDrawable(R.drawable.icon_en));
+////					mOverlay.addItem(item);
+//					mOverlay.addItem(mItems);
+//					Bitmap[] bitMaps={
+//							    BMapUtil.getBitmapFromView(popupLeft), 		
+////							    BMapUtil.getBitmapFromView(popupInfo), 		
+//							    BMapUtil.getBitmapFromView(popupRight) 		
+//						    };
+//				    pop.showPopup(bitMaps,item.getPoint(),48);
+//					mMapView.getOverlays().add(mOverlay);
+//					mMapView.refresh();
+//					mItems.clear();
+//					System.out.println(" ---------------->mItems.size = "+mItems.size());
+//				}
+			}
+           
+			@Override
+			public void onMapLoadFinish() {
+				
+				//地图初始化完成时，此回调被触发
+				// TODO Auto-generated method stub
+				
 			}
 		};
 		mMapView.regMapViewListener(ManagerApp.getInstance().mBMapManager, mMapListener);
 		
-		
-		Button test = (Button)findViewById(R.id.toRoute);
-		test.setOnClickListener(new OnClickListener() {
+		/*地图点击事件监听
+		 * */
+		mapTouchListener = new MKMapTouchListener() {
 			
 			@Override
-			public void onClick(View arg0) {
+			public void onMapLongClick(GeoPoint arg0) {
 				// TODO Auto-generated method stub
-				if(routeOverlay!=null)
-				{
-					mMapView.getOverlays().remove(routeOverlay);
-					mMapView.refresh();
-				}
-//				RoutePlanResult result = planner.plan(nodeList, point1,point7);
-//				int size = result.passedNodeIDs.size();
-//				GeoPoint[] points =(GeoPoint[]) result.passedNodeIDs.toArray(new GeoPoint[size]);
-//				route.customizeRoute( point1, point7, points);
-//				routeOverlay.setData(route);
-                planner = new RoutePlanner(point1, point6, nodeList);
-				planner.start();
-				RoutePlanResult result = planner.getRoutePlanResult();
-				int size = result.passedNodeIDs.size();
-				double distance = result.getDistance();
-			    GeoPoint[] points = (GeoPoint[])result.passedNodeIDs.toArray(new GeoPoint[size]);
-			    route.customizeRoute( point1, point6, points);
-				routeOverlay.setData(route);
-				mMapView.getOverlays().add(routeOverlay);
-				mMapView.refresh();
-				Toast.makeText(HusterMain.this,String.valueOf((int)distance), Toast.LENGTH_SHORT).show();
-				 // 使用zoomToSpan()绽放地图，使路线能完全显示在地图上
-			    mMapView.getController().zoomToSpan(routeOverlay.getLatSpanE6(), routeOverlay.getLonSpanE6());
-//			    mMapController.animateTo(routeOverlay.getCenter());
-			    routeOverlay.animateTo();
+				
 			}
-		});
+			
+			@Override
+			public void onMapDoubleClick(GeoPoint arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void onMapClick(GeoPoint point) {
+				// TODO Auto-generated method stub
+				
+				System.out.println("---------->mapTouched !");
+				currentPt = point;
+				if(mCurItem != null)
+				{
+					if(!currentPt.equals(mCurItem.getPoint()))
+					{
+						if(pop != null)
+						{
+							pop.hidePop();
+							mMapView.refresh();
+						}
+					}
+					else {
+//						 popupText.setText(mCurItem.getTitle());
+						   Bitmap[] bitMaps={
+							    BMapUtil.getBitmapFromView(popupLeft), 		
+//							    BMapUtil.getBitmapFromView(popupInfo), 		
+							    BMapUtil.getBitmapFromView(popupRight) 		
+						    };
+						    pop.showPopup(bitMaps,mCurItem.getPoint(),32);
+					}
+				}
+//				else {
+//					Time t=new Time(); // or Time t=new Time("GMT+8"); 加上Time Zone资料。 
+//
+//					t.setToNow(); // 取得系统时间。 
+//					int second = t.second; 
+//					for (int i = 0; i < 1000000; i++) {
+//						ArrayList<GeoPoint> points = new ArrayList<GeoPoint>();
+////						System.out.println("-------------->i = "+i);
+//					}
+//					t.setToNow(); // 取得系统时间。 
+//					int second_end = t.second; 
+//					System.out.println("所需时间为： "+(second_end-second));
+//				}
+				
+			}
+		};
+		mMapView.regMapTouchListner(mapTouchListener);
+		
 	
-        list_dropdown=(ListView)findViewById(R.id.listview1);
-        editSearch = (EditText) findViewById(R.id.searchkey); 
+         list_dropdown=(ListView)findViewById(R.id.listview1);
+         editSearch = (EditText) findViewById(R.id.searchkey); 
 	
 		 adapter1=new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1,myPoies);
 		 list_dropdown.setAdapter(adapter1);
@@ -635,11 +771,15 @@ public class HusterMain extends Activity {
 					  layout_dismiss();
 					
 				}
+				if (mOverlay != null) {
+					mMapView.getOverlays().remove(mOverlay);
+					mMapView.refresh();
+				}
 				ArrayList<OverlayItem> items=new ArrayList<OverlayItem>();
 			    clearOverlay();
 				 String place=null;
 				 place =editSearch.getText().toString();
-				 boolean isMatch=false;
+//				 boolean isMatch=false;
 				 mySearcher = new DatabaseSearcher(HusterMain.this);
 				 placeList=mySearcher.searchGeo(place);
 				System.out.println("------------->placeList.Size"+placeList.size());
@@ -651,29 +791,33 @@ public class HusterMain extends Activity {
 					 if(placeList.get(i).getLatitudeE6()!=0||placeList.get(i).getLongitudeE6()!=0)
 					 {
 					 OverlayItem item=new OverlayItem(placeList.get(i),"","");
+					 
+					 if (!items.contains(item)) {
+						items.add(item);
+					}
 					
-					    if(items.isEmpty())
-					      {
-						     items.add(item);
-					       }
-					   else {
-						  
-						   boolean hasExist=false;
-						    for(int j=0;j<items.size();j++)
-						      {
-							     if((item.getPoint().getLatitudeE6()!=items.get(j).getPoint().getLatitudeE6())||(item.getPoint().getLongitudeE6()!=items.get(j).getPoint().getLongitudeE6()))
-							    {
-								 continue; 
-							    }
-							     else 
-							     {
-							    	 hasExist=true;
-							    	 break;
-								 }
-						      }
-						     if(!hasExist)
-						    	 items.add(item);
-					        }
+//					    if(items.isEmpty())
+//					      {
+//						     items.add(item);
+//					       }
+//					   else {
+//						  
+//						   boolean hasExist=false;
+//						    for(int j=0;j<items.size();j++)
+//						      {
+//							     if((item.getPoint().getLatitudeE6()!=items.get(j).getPoint().getLatitudeE6())||(item.getPoint().getLongitudeE6()!=items.get(j).getPoint().getLongitudeE6()))
+//							    {
+//								 continue; 
+//							    }
+//							     else 
+//							     {
+//							    	 hasExist=true;
+//							    	 break;
+//								 }
+//						      }
+//						     if(!hasExist)
+//						    	 items.add(item);
+//					        }
 					
 					
 					 }					
@@ -682,12 +826,12 @@ public class HusterMain extends Activity {
 				   System.out.println("---------->Size:"+String.valueOf(items.size()));
 				   
 				 }				 
-				 if(!items.isEmpty())
-				 {
-					 isMatch=true;
-				 }
+//				 if(!items.isEmpty())
+//				 {
+//					 isMatch=true;
+//				 }
 				
-				if(!isMatch)
+				if(items.isEmpty())
 				{
 				String iString="抱歉，没有您要的位置数据";
 				Toast.makeText(HusterMain.this, iString, Toast.LENGTH_SHORT).show();
@@ -702,7 +846,10 @@ public class HusterMain extends Activity {
 					int distance;
 					if(locationFinish&&(items.size()==1))
 					{
-						distance=(int)GetShortDistance(items.get(0).getPoint().getLongitudeE6()*1e-6, items.get(0).getPoint().getLatitudeE6()*1e-6, locData.longitude, locData.latitude);
+						double lat = locData.latitude;
+						double lon = locData.longitude;
+						GeoPoint locGeoPoint = new GeoPoint((int)(lat * 1E6), (int)(lon * 1E6));
+						distance=(int)GetShortDistance(items.get(0).getPoint(), locGeoPoint);
 						Toast.makeText(HusterMain.this,"与你所在位置相距"+ String.valueOf(distance)+"米", Toast.LENGTH_LONG).show();
 					}
 					initOverlay(items);
@@ -759,9 +906,9 @@ public class HusterMain extends Activity {
 				 {
 					 Toast.makeText(HusterMain.this, "不在武汉市或定位不成功，开启GPS或网络！", Toast.LENGTH_SHORT).show();
 				}
-				else {
-					 mMapController.setZoom(15);
-				}
+//				else {
+//					 mMapController.setZoom(15);
+//				}
 				 clearLable();//清除标注物
 			}
 		});
@@ -818,9 +965,9 @@ public class HusterMain extends Activity {
 					 ArrayList<OverlayItem> items=new ArrayList<OverlayItem>();
 					
 			         //mOverlay = new MyOverlay(getResources().getDrawable(R.drawable.icon_marka),mMapView);	
-					System.out.println("----------->list1Size:"+list_dropdown.getCount());
+//					System.out.println("----------->list1Size:"+list_dropdown.getCount());
 					String place = list_dropdown.getItemAtPosition(arg2).toString();
-					System.out.println("---------->1"+place);
+//					System.out.println("---------->1"+place);
 			        DatabaseHust    p=mySearcher.clickSearch(place);
 			      //  System.out.println("-------------->2"+"Lat="+String.valueOf(p.getLatitudeE6())+"   "+"Lon="+String.valueOf(p.getLongitudeE6()));
 					if(p.geoPoint.getLatitudeE6()!=0||p.geoPoint.getLongitudeE6()!=0)
@@ -840,11 +987,14 @@ public class HusterMain extends Activity {
 						Toast.makeText(HusterMain.this, "抱歉，无该地的地址信息", Toast.LENGTH_SHORT).show();
 					}
 					else{
-						System.out.println("------------->Size:"+items.size());
+//						System.out.println("------------->Size:"+items.size());
 						int distance;
 						if(locationFinish)
 						{
-							distance=(int)GetShortDistance(items.get(0).getPoint().getLongitudeE6()*1e-6, items.get(0).getPoint().getLatitudeE6()*1e-6, locData.longitude, locData.latitude);
+							double lat = locData.latitude;
+							double lon = locData.longitude;
+							GeoPoint locGeoPoint = new GeoPoint((int)(lat * 1E6), (int)(lon * 1E6));
+							distance=(int)GetShortDistance(items.get(0).getPoint(), locGeoPoint );
 							Toast.makeText(HusterMain.this,"与你所在位置相距"+ String.valueOf(distance)+"米", Toast.LENGTH_LONG).show();
 						}
 						
@@ -865,6 +1015,16 @@ public class HusterMain extends Activity {
 					 String flagString=s.toString().trim();
 					if(flagString==null||flagString.length()<=0)
 					{
+						if(pop != null)
+						{
+							pop.hidePop();
+						}
+						
+						if(routeOverlay != null)
+						{
+							mMapView.getOverlays().remove(routeOverlay);
+							mMapView.refresh();
+						}
 						searchButton.setEnabled(false);
 						 adapter1=new ArrayAdapter<String>(HusterMain.this,android.R.layout.simple_list_item_1,new String[]{});	
 						 list_dropdown.setAdapter(adapter1);
@@ -881,43 +1041,44 @@ public class HusterMain extends Activity {
 						 /**
 						  * 更新提示数据
                            */
-						mySearcher = new DatabaseSearcher(HusterMain.this);
-						recievetextViewList=mySearcher.search(editSearch.getText().toString());
-						myPoies=recievetextViewList.toArray(new String[recievetextViewList.size()]);
-					   
-		                if(myPoies.length>0)
-		                {
-		                	 adapter1=new ArrayAdapter<String>(HusterMain.this,android.R.layout.simple_list_item_1,myPoies);
-		                	 list_dropdown.setAdapter(adapter1);
-		                	 list_dropdown.setVisibility(View.VISIBLE);
-		                	 int  totalHeight = 0;
-		                	 int  list_DividerHeight = list_dropdown.getDividerHeight();
-				               if(myPoies.length>8)
-				               {
-				            	   
-				            	   for (int i = 0; i < 8; i++) {
-				                        View listItem = adapter1.getView(i, null, list_dropdown);
-				                        listItem.measure(0, 0); // 计算子项View 的宽高
-				                        int list_child_item_height = listItem.getMeasuredHeight()+list_DividerHeight;
-				                        totalHeight += list_child_item_height; // 统计所有子项的总高度
-				                     }
-				            	   LayoutParams params=new LayoutParams(metrics.widthPixels, totalHeight);
-				            	   list_dropdown.setLayoutParams(params);
+						   mySearcher = new DatabaseSearcher(HusterMain.this);
+					       recievetextViewList=mySearcher.search(editSearch.getText().toString());
+						   myPoies=recievetextViewList.toArray(new String[recievetextViewList.size()]);
+							 
+						   if(myPoies.length>0)
+			                {
+			                	 adapter1=new ArrayAdapter<String>(HusterMain.this,android.R.layout.simple_list_item_1,myPoies);
+			                	 list_dropdown.setAdapter(adapter1);
+			                	 list_dropdown.setVisibility(View.VISIBLE);
+			                	 int  totalHeight = 0;
+			                	 int  list_DividerHeight = list_dropdown.getDividerHeight();
+					               if(myPoies.length>8)
+					               {
+					            	   
+					            	   for (int i = 0; i < 8; i++) {
+					                        View listItem = adapter1.getView(i, null, list_dropdown);
+					                        listItem.measure(0, 0); // 计算子项View 的宽高
+					                        int list_child_item_height = listItem.getMeasuredHeight()+list_DividerHeight;
+					                        totalHeight += list_child_item_height; // 统计所有子项的总高度
+					                     }
+					            	   LayoutParams params=new LayoutParams(metrics.widthPixels, totalHeight);
+					            	   list_dropdown.setLayoutParams(params);
 
-				               }
-				               else{
-				            	  
-				            	   LayoutParams params2=new LayoutParams(metrics.widthPixels, LayoutParams.WRAP_CONTENT);
-				            	   list_dropdown.setLayoutParams(params2);
-				               }
-				               list_dropdown.bringToFront();
-				              
-				             
-		                }
-		                else {
-		                	list_dropdown.setEmptyView(list_dropdown.getEmptyView());
-		                	list_dropdown.setVisibility(View.GONE);
-						}
+					               }
+					               else{
+					            	  
+					            	   LayoutParams params2=new LayoutParams(metrics.widthPixels, LayoutParams.WRAP_CONTENT);
+					            	   list_dropdown.setLayoutParams(params2);
+					               }
+					               list_dropdown.bringToFront();
+					              
+					             
+			                }
+			                else {
+			                	list_dropdown.setEmptyView(list_dropdown.getEmptyView());
+			                	list_dropdown.setVisibility(View.GONE);
+							}  
+		               
 					}
 					
 				}
@@ -963,7 +1124,6 @@ public class HusterMain extends Activity {
 		float touchY;
 		touchX = event.getX();
 		touchY = event.getY();
-		
 		float top;
 //		float bottom;
 		float right;
@@ -1017,28 +1177,31 @@ public class HusterMain extends Activity {
 	        LocationClientOption option = new LocationClientOption();
 	        option.setOpenGps(true);//打开gps
 	        option.setCoorType("bd09ll");     //设置坐标类型
-	        option.setScanSpan(5000);//设置定时定位的时间间隔。单位ms
-	        option.disableCache(false);//是否启用缓存定位
+	       	option.setScanSpan(5000);//设置定时定位的时间间隔。单位ms        
+//	        option.disableCache(false);//是否启用缓存定位
 	        mLocClient.setLocOption(option);
 	        mLocClient.start();	        
 	        myLocationOverlay=new MyLocationOverlay(mMapView);	        
 		      //设置定位数据
-			    myLocationOverlay.setData(locData);			   
-			    myLocationOverlay.setMarker(getResources().getDrawable(R.drawable.icon_geo));
-			    //添加定位图层
-				mMapView.getOverlays().add(myLocationOverlay);
-				myLocationOverlay.enableCompass();
-				//修改定位数据后刷新图层生效
-				mMapView.refresh();
+		    myLocationOverlay.setData(locData);			   
+		    myLocationOverlay.setMarker(getResources().getDrawable(R.drawable.icon_geo));
+		    //添加定位图层
+			mMapView.getOverlays().add(myLocationOverlay);
+			myLocationOverlay.enableCompass();
+			//修改定位数据后刷新图层生效
+			mMapView.refresh();
 				
 	}
-	
+
 	
     /**
      * 清除所有Overlay
      * @param view
      */
     public void clearOverlay(){
+    	if (routeOverlay != null) {
+			mMapView.getOverlays().remove(routeOverlay);
+		}
     	if(mOverlay!=null)
     	{
     	mOverlay.removeAll();    	
@@ -1101,46 +1264,59 @@ public class HusterMain extends Activity {
 		@Override
     	public boolean onTap(int index){
     		OverlayItem item = getItem(index);
-    		//Toast.makeText(HusterMain.this, "item: "+String.valueOf(index)+" "+"has been touched", Toast.LENGTH_SHORT).show();
-    		System.out.println("------------->ClickItem:"+String.valueOf(index)+"lat="+String.valueOf(item.getPoint().getLatitudeE6())+"  "+"lon="+
-    		String.valueOf(item.getPoint().getLongitudeE6()));
-    		mySearcher=new DatabaseSearcher(HusterMain.this);
-    		List<DatabaseHust>  databaseHusts=new ArrayList<DatabaseHust>();
-    		databaseHusts=mySearcher.search(item.getPoint());
-    		System.out.println("------------------>dataSize:"+databaseHusts.size());
-    		boolean hasDetail=false;
-    		if(!databaseHusts.isEmpty()){
-                
-    			for (int i = 0; i < databaseHusts.size(); i++) {
-					if(!databaseHusts.get(i).buildingName.equals(databaseHusts.get(i).officeNanme) )
-					{
-						hasDetail=true;
-						break;
-					}
-				}
-    			
-    			if(!hasDetail||(databaseHusts.size()==1&&databaseHusts.get(0).officePhone.isEmpty()))
-    			{
-    				Toast.makeText(HusterMain.this, databaseHusts.get(0).buildingName, Toast.LENGTH_SHORT).show();
-    				mMapController.animateTo(item.getPoint());
-    				return true;
-    			}
-    			else {
-    				Intent intent=new Intent(HusterMain.this,ShowDetail_Activity.class);
-        			intent.putExtra("x", item.getPoint().getLongitudeE6());
-        			intent.putExtra("y", item.getPoint().getLatitudeE6());
-        			startActivity(intent);
-				}
-    			
-    			
-    		return true;
-    		}
+    		mCurItem = item;
     		
-    		else{
-    			Toast.makeText(HusterMain.this, item.getSnippet(), Toast.LENGTH_SHORT).show();
-    			mMapController.animateTo(item.getPoint());
-    			return true;
-    		}
+    		System.out.println("Myoverlay.item = "+item.getPoint());
+    		//Toast.makeText(HusterMain.this, "item: "+String.valueOf(index)+" "+"has been touched", Toast.LENGTH_SHORT).show();
+//    		System.out.println("------------->ClickItem:"+String.valueOf(index)+"lat="+String.valueOf(item.getPoint().getLatitudeE6())+"  "+"lon="+
+//    		String.valueOf(item.getPoint().getLongitudeE6()));
+//    		mySearcher=new DatabaseSearcher(HusterMain.this);
+//    		List<DatabaseHust>  databaseHusts=new ArrayList<DatabaseHust>();
+//    		databaseHusts=mySearcher.search(item.getPoint());
+//    		System.out.println("------------------>dataSize:"+databaseHusts.size());
+//    		boolean hasDetail=false;
+//    		if(!databaseHusts.isEmpty()){
+//                
+//    			for (int i = 0; i < databaseHusts.size(); i++) {
+//					if(!databaseHusts.get(i).buildingName.equals(databaseHusts.get(i).officeNanme) )
+//					{
+//						hasDetail=true;
+//						break;
+//					}
+//				}
+//    			
+//    			if(!hasDetail||(databaseHusts.size()==1&&databaseHusts.get(0).officePhone.isEmpty()))
+//    			{
+//    				Toast.makeText(HusterMain.this, databaseHusts.get(0).buildingName, Toast.LENGTH_SHORT).show();
+//    				mMapController.animateTo(item.getPoint());
+//    				return true;
+//    			}
+//    			else {
+//    				Intent intent=new Intent(HusterMain.this,ShowDetail_Activity.class);
+//        			intent.putExtra("x", item.getPoint().getLongitudeE6());
+//        			intent.putExtra("y", item.getPoint().getLatitudeE6());
+//        			startActivity(intent);
+//				}
+//    			
+//    			
+//    		return true;
+//    		}
+//    		
+//    		else{
+//    			Toast.makeText(HusterMain.this, item.getSnippet(), Toast.LENGTH_SHORT).show();
+//    			mMapController.animateTo(item.getPoint());
+//    			return true;
+//    		}
+    		System.out.println("-------------------->111");
+//    		 popupText.setText(getItem(index).getTitle());
+			   Bitmap[] bitMaps={
+				    BMapUtil.getBitmapFromView(popupLeft), 		
+//				    BMapUtil.getBitmapFromView(popupInfo), 		
+				    BMapUtil.getBitmapFromView(popupRight) 		
+			    };
+			    pop.showPopup(bitMaps,item.getPoint(),48);
+			    System.out.println("------------------>222");
+    		return true;
     	}
     	
     	@Override
@@ -1203,6 +1379,7 @@ public class HusterMain extends Activity {
 	            	fenlei_pw.dismiss();// 关闭
 	            	fenlei_pw_isshowing = false;
 	                String  pString=btnmess.getText().toString();
+	                fenleiString = pString;
 	                toClassifyListview(pString);
 	            }
 	        }); 
@@ -1215,6 +1392,7 @@ public class HusterMain extends Activity {
 				fenlei_pw.dismiss();// 关闭
 				fenlei_pw_isshowing = false;
                 String pString=btnmarket.getText().toString();
+                fenleiString = pString;
                 toClassifyListview(pString);
 			}
 		});
@@ -1227,6 +1405,7 @@ public class HusterMain extends Activity {
 				fenlei_pw.dismiss();// 关闭
 				fenlei_pw_isshowing = false;
                 String pString=btnatm.getText().toString();
+                fenleiString = pString;
                 toClassifyListview(pString);
 			}
 		});
@@ -1239,6 +1418,7 @@ public class HusterMain extends Activity {
 				fenlei_pw.dismiss();// 关闭
 				fenlei_pw_isshowing = false;
                 String pString=btnprint.getText().toString();
+                fenleiString = pString;
                 toClassifyListview(pString);
 			}
 		});
@@ -1265,8 +1445,8 @@ public class HusterMain extends Activity {
 	  /*
 	   *  接收另一个Activity的Intent 
 	   * */	  
-     @Override	  
-       public void onActivityResult(int requestCode,int resultCode,Intent intent)
+      @Override	  
+      public void onActivityResult(int requestCode,int resultCode,Intent intent)
          {
 	          if(requestCode==0&&resultCode==0)
 	            {
@@ -1278,10 +1458,35 @@ public class HusterMain extends Activity {
 			             editSearch.setText(officename);
 			             editSearch.selectAll();
 			             list_dropdown.setVisibility(View.GONE);	
-		                 List<GeoPoint>  geoPoints=mySearcher.searchGeo(officename);
-		                 OverlayItem item=new OverlayItem(geoPoints.get(0), "", officename);
-			             mItems.add(item);
-		                 mMapController.animateTo(geoPoints.get(0));
+
+			             List<DatabaseHust> databaseHusts;
+			             databaseHusts = mySearcher.sortData(fenleiString);
+			             GeoPoint flagPoint = null;
+			             for (int i = 0; i < databaseHusts.size(); i++) {
+			            	 if (databaseHusts.get(i).officeNanme.equals(officename)) {
+			            		 flagPoint = databaseHusts.get(i).geoPoint;
+			            		 clickPoint = databaseHusts.get(i).geoPoint;
+								 OverlayItem item1 = new OverlayItem(databaseHusts.get(i).geoPoint, databaseHusts.get(i).officeNanme, "");
+								 mItems.add(item1);
+								 System.out.println("the officename =  "+databaseHusts.get(i).officeNanme);
+								 break;
+							}
+							
+						}
+			            
+			             for (int i = 0; i < databaseHusts.size(); i++) {
+							if ( ! databaseHusts.get(i).geoPoint.equals(flagPoint)) {
+								
+								OverlayItem item2 = new OverlayItem(databaseHusts.get(i).geoPoint, databaseHusts.get(i).officeNanme, "");
+								 item2.setMarker(getResources().getDrawable(R.drawable.icon_gcoding));
+								 mItems.add(item2);
+							}
+						}
+			             databaseHusts = null;
+			             Message msg=new Message();
+	        			 msg.what=0;
+	        			 handler.sendMessage(msg);
+		                 mMapController.animateTo(clickPoint);
 			             Toast.makeText(HusterMain.this, officename, Toast.LENGTH_SHORT).show();
 			
 		            } 
@@ -1316,7 +1521,7 @@ public class HusterMain extends Activity {
 			        pw.setContentView(vPopupWindow);   // 为弹出框设定自定义的布局 
 			        pw.setOutsideTouchable(true);
 			        pw.setBackgroundDrawable(new BitmapDrawable());
-			// 【Ⅲ】 显示popupWindow对话框
+			           // 【Ⅲ】 显示popupWindow对话框
 		           pw.update();
 		           pw.showAsDropDown(anchor);
 		  listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -1330,6 +1535,8 @@ public class HusterMain extends Activity {
 	
 		       
 	  }
+  
+ 
 	
      /*
       * 收回菜单栏
@@ -1367,6 +1574,7 @@ public class HusterMain extends Activity {
 	            	locData.latitude = location.getLatitude();
 	 	            locData.longitude = location.getLongitude();
 	 	            //如果不显示定位精度圈，将accuracy赋值为0即可
+//	 	            System.out.println(" _------------> locData.lat = "+locData.latitude +" \n locData.lon = "+locData.longitude );
 	 	            if(location.getRadius()>100)
 	 	            {
 	 	            	locData.accuracy=100;
@@ -1487,10 +1695,9 @@ public class HusterMain extends Activity {
 	 * */	
 	public void initOverlay(ArrayList<OverlayItem> items)
 	{
-		int lonFlag;
+		
 	    ArrayList<OverlayItem>  overlayItems=new ArrayList<OverlayItem>();
-		int start;
-		int end = 0;
+		
 		int flag=items.size()>10?10:items.size();
 		if(flag!=0){
 		  for(int i=0;i<flag;i++)
@@ -1503,110 +1710,23 @@ public class HusterMain extends Activity {
 		 
 		     mOverlay.addItem(overlayItems);
 		     mMapView.getOverlays().add(mOverlay);
-		  if(locationFinish)
-		   {
-			   int locLon=(int)(locData.longitude *  1e6);
-			   int temp1=findthelargestLon(overlayItems);
-			   int temp2=findthesmallestLon(overlayItems);
-//			 int temp3=findthelargestLat(items);
-//			 int temp4=findthesmallestLat(items);
-			   start=4800;
-			    lonFlag=temp1-overlayItems.get(0).getPoint().getLongitudeE6();
-			
-			if(temp2>locLon)
-			{
-				
-				if((overlayItems.get(0).getPoint().getLongitudeE6()-locLon)>lonFlag)
-				{
-					
-					end=2*(overlayItems.get(0).getPoint().getLongitudeE6()-locLon);
-					mMapController.zoomToSpan(start, end);
-					System.out.println("---------->Start="+String.valueOf(start)+"  "+"end="+String.valueOf(end));
-				}
-				else {
-					end=2*lonFlag;
-					mMapController.zoomToSpan(start, end);
-				}
-			}
-			else if(locLon>temp1)
-			{
-				if((locLon-overlayItems.get(0).getPoint().getLongitudeE6())>(overlayItems.get(0).getPoint().getLongitudeE6()-temp2))
-				{ 
-					end=2*(locLon-overlayItems.get(0).getPoint().getLongitudeE6());
-				    mMapController.zoomToSpan(start, end);
-				    }
-				else  {
-					end=2*(overlayItems.get(0).getPoint().getLongitudeE6()-temp2);
-					mMapController.zoomToSpan(start, end);
-				}
-				System.out.println("---------->Start="+String.valueOf(start)+"  "+"end="+String.valueOf(end));
-			}			
-			
-		}
+		     mMapView.refresh();
 		
-		else {
-			
-			int temp1=findthelargestLon(overlayItems);
-			
-			int temp2=findthesmallestLon(overlayItems);
-			
-			start=4800;
-			
-			if((temp1-overlayItems.get(0).getPoint().getLongitudeE6())>(overlayItems.get(0).getPoint().getLongitudeE6()-temp2))
-			{
-				lonFlag=temp1-overlayItems.get(0).getPoint().getLongitudeE6();
-				end=2*lonFlag;
-			}
-			else if ((temp1-overlayItems.get(0).getPoint().getLongitudeE6())<=(overlayItems.get(0).getPoint().getLongitudeE6()-temp2)) {
-				lonFlag=overlayItems.get(0).getPoint().getLongitudeE6()-temp2;
-				end=2*lonFlag;
-			}
-			if(end!=0)
-			{
-				mMapController.zoomToSpan(start, end);
-			}
+		     clearLable();//根据缩放级别清除标注
 		
-		}
-		
-		clearLable();//根据缩放级别清除标注
-		//mMapView.refresh();
-		mMapController.animateTo(items.get(0).getPoint());
+		     mCurItem = items.get(0);
+		     Bitmap[] bitMaps={
+				      BMapUtil.getBitmapFromView(popupLeft), 		
+//				      BMapUtil.getBitmapFromView(popupInfo), 		
+				      BMapUtil.getBitmapFromView(popupRight) 		
+			    };
+			    pop.showPopup(bitMaps,items.get(0).getPoint(),48);
+		     mMapController.animateTo(items.get(0).getPoint());
 		}
 		
 		else			
 			return;		
 	}
-	
-	/*找出搜到覆盖物的最大最小经度
-	 * 
-	 * */
-	public int findthelargestLon(ArrayList<OverlayItem> items)
-	{
-		int  largestLon;
-		largestLon=items.get(0).getPoint().getLongitudeE6();
-		for(int i=0;i<items.size();i++)
-		{
-			if(items.get(i).getPoint().getLongitudeE6()>largestLon)
-			{
-				largestLon=items.get(i).getPoint().getLongitudeE6();
-			}
-		}
-		return largestLon;
-	}
-	public int findthesmallestLon(ArrayList<OverlayItem> items)
-	{
-		int  smallestLon;
-		smallestLon=items.get(0).getPoint().getLongitudeE6();
-		for(int i=0;i<items.size();i++)
-		{
-			if(items.get(i).getPoint().getLongitudeE6()<smallestLon)
-			{
-				smallestLon=items.get(i).getPoint().getLongitudeE6();
-			}
-		}
-		return smallestLon;
-	}
-	
 	
 	
 	/*
@@ -1660,31 +1780,141 @@ public class HusterMain extends Activity {
 	}
 	
 	/*
+	 * 将检索的坐标点转换为搜索路径所需的节点
+	 * */
+	public Node PointToNode(GeoPoint point,ArrayList<Node> nodes , GeoPoint endPoint)
+	{
+		double tempDistance = Double.MAX_VALUE;
+		double finalDistance = Double.MAX_VALUE;
+		Node tempNode = new Node(point);
+		Node finalNode = new Node(point);
+		for (int i = 0; i < nodes.size(); i++) {
+			if (finalDistance > GetShortDistance(point, nodes.get(i).getPointID())) {
+				tempDistance = finalDistance;
+				finalDistance = GetShortDistance(point, nodes.get(i).getPointID());
+				tempNode = finalNode;
+				finalNode = nodes.get(i);
+			}
+		}
+		double tempNodeDistance = GetShortDistance(point, tempNode.getPointID()) + GetShortDistance(tempNode.getPointID(), endPoint);
+		double finalNodeDistance = GetShortDistance(point, finalNode.getPointID()) + GetShortDistance(finalNode.getPointID(), endPoint);
+		if ( tempNodeDistance > finalNodeDistance) {
+			return finalNode;
+		}
+		else {
+			if ((tempDistance - finalDistance ) > 19) {
+				return finalNode;
+			}
+			else {
+				return tempNode;
+			}
+		}
+	}
+	
+	
+	public Node findnearestNode(GeoPoint point,ArrayList<Node> nodes)
+	{
+		double tempDistance = Double.MAX_VALUE;
+		Node node = new Node(point);
+		for (int i = 0; i < nodes.size(); i++) {
+			if (tempDistance > GetShortDistance(point, nodes.get(i).getPointID())) {
+				tempDistance = GetShortDistance(point, nodes.get(i).getPointID());
+				node = nodes.get(i);
+			}
+		}
+		
+		return node;
+		
+	}
+	
+	/*
+	 * 找中转点
+	 * */
+	public Node getTransitionNode(Node startNode, Node endNode)
+	{
+		int startLat = startNode.getPointID().getLatitudeE6();
+		int startLon = startNode.getPointID().getLongitudeE6();
+		int endLat = endNode.getPointID().getLatitudeE6();
+		int endLon = endNode.getPointID().getLongitudeE6();
+		//起点在A区域
+		if (startLon > Awedge && startLon < Aeedge && startLat > Asedge && startLat < Anedge) {
+			if (endLon > Bwedge && endLon < Beedge && endLat > Bsedge && endLat < Bnedge) {
+				GeoPoint tempPoint = new GeoPoint(Asedge, startLon);
+				return PointToNode(tempPoint, nodeList, endNode.getPointID());
+//				return findnearestNode(tempPoint, nodeList);
+			}
+			else if (endLat > Bnedge && endLon > EWBorder) {
+				return findnearestNode(startNode.getPointID(), lableNodes);
+			}
+			else {
+				GeoPoint temPoint = new GeoPoint(startLat, endLon);
+				return PointToNode(temPoint, nodeList, endNode.getPointID());
+//				return findnearestNode(temPoint, nodeList);
+			}
+		}
+		
+		else if (startLon > Bwedge && startLon < Beedge && startLat > Bsedge && startLat < Bnedge) {
+			if (endLon > Awedge && endLon < Aeedge && endLat > Asedge && endLat < Anedge ) {
+				GeoPoint tempPoint = new GeoPoint(Asedge, endLon);
+				return PointToNode(tempPoint, nodeList, startNode.getPointID());
+//				return findnearestNode(tempPoint, nodeList);
+			}
+			else if (endLon < EWBorder1) {
+				return PointToNode(endNode.getPointID(), lableNodes, startNode.getPointID());
+//				return findnearestNode(endNode.getPointID(), lableNodes);
+			}
+			else return null;
+		}
+		
+		else if (startLat > Bnedge && startLon > EWBorder) {
+			if (endLon < EWBorder1) {
+				return PointToNode(endNode.getPointID(), lableNodes, startNode.getPointID());
+//				return findnearestNode(endNode.getPointID(), lableNodes);
+			}
+			else {
+				return null;
+			}
+		}
+		
+		else {
+			GeoPoint tempPoint = new GeoPoint(startLat, endLon);
+			return PointToNode(tempPoint, nodeList, startNode.getPointID());
+//			return findnearestNode(tempPoint, nodeList);
+		}
+	}
+	
+	public GeoPoint getTheCenter(GeoPoint point1, GeoPoint point2)
+	{
+		return new GeoPoint((point1.getLatitudeE6()+point2.getLatitudeE6())/2, (point1.getLongitudeE6()+point2.getLongitudeE6())/2);
+	}
+	
+	/*
 	获取地图上两点之间距离的方法
 	*/	
-	public double GetShortDistance(double lon1, double lat1, double lon2, double lat2)
-		{
-			double ew1, ns1, ew2, ns2;
-			double dx, dy, dew;
-			double distance;
-			// 角度转换为弧度
-			ew1 = lon1 * DEF_PI180;
-			ns1 = lat1 * DEF_PI180;
-			ew2 = lon2 * DEF_PI180;
-			ns2 = lat2 * DEF_PI180;
-			// 经度差
-			dew = ew1 - ew2;
-			// 若跨东经和西经180 度，进行调整
-			if (dew > DEF_PI)
-			dew = DEF_2PI - dew;
-			else if (dew < -DEF_PI)
-			dew = DEF_2PI + dew;
-			dx = DEF_R * Math.cos(ns1) * dew; // 东西方向长度(在纬度圈上的投影长度)
-			dy = DEF_R * (ns1 - ns2); // 南北方向长度(在经度圈上的投影长度)
-			// 勾股定理求斜边长
-			distance = Math.sqrt(dx * dx + dy * dy);
-			return distance;
-		}
+	public double GetShortDistance(GeoPoint sPoint, GeoPoint ePoint)
+	{
+		double ew1, ns1, ew2, ns2;
+		double dx, dy, dew;
+		double distance;
+		// 角度转换为弧度
+		ew1 = sPoint.getLongitudeE6() *(1e-6)* DEF_PI180;
+		ns1 = sPoint.getLatitudeE6() *(1e-6)* DEF_PI180;
+		ew2 = ePoint.getLongitudeE6() *(1e-6)* DEF_PI180;
+		ns2 = ePoint.getLatitudeE6() *(1e-6)* DEF_PI180;
+		// 经度差
+		dew = ew1 - ew2;
+		// 若跨东经和西经180 度，进行调整
+		if (dew > DEF_PI)
+		dew = DEF_2PI - dew;
+		else if (dew < -DEF_PI)
+		dew = DEF_2PI + dew;
+		dx = DEF_R * Math.cos(ns1) * dew; // 东西方向长度(在纬度圈上的投影长度)
+		dy = DEF_R * (ns1 - ns2); // 南北方向长度(在经度圈上的投影长度)
+		// 勾股定理求斜边长
+		distance = Math.sqrt(dx * dx + dy * dy);
+		return distance;
+	}
+	
 	
 	/*
 	 * 控制软键盘消失
@@ -1719,7 +1949,11 @@ public class HusterMain extends Activity {
 				return true;
 			}
 	        } 
-	        return false; 
+	        
+	        
+	       return false;
 	    }
+     
+     
 	 
 }

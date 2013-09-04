@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.baidu.platform.comapi.basestruct.GeoPoint;
+import com.example.aimhustermap.R;
 import com.example.aimhustermap.adapter.ShowDetailAdapter;
 import com.example.aimhustermap.db.DatabaseHust;
 import com.example.aimhustermap.db.DatabaseSearcher;

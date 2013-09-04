@@ -25,6 +25,7 @@ import com.baidu.mapapi.map.TextItem;
 import com.baidu.mapapi.map.TextOverlay;
 import com.baidu.mapapi.map.Symbol.Color;
 import com.baidu.platform.comapi.basestruct.GeoPoint;
+import com.example.aimhustermap.R;
 import com.example.aimhustermap.HusterMain.MyOverlay;
 import com.example.aimhustermap.db.DatabaseHust;
 import com.example.aimhustermap.db.DatabaseSearcher;
@@ -316,6 +317,12 @@ public class BaseMap extends Activity{
 					/**
 					 *  地图完成带动画的操作（如: animationTo()）后，此回调被触发
 					 */
+				}
+
+				@Override
+				public void onMapLoadFinish() {
+					// TODO Auto-generated method stub
+					
 				}
 			};
 			mMapView.regMapViewListener(ManagerApp.getInstance().mBMapManager, mMapListener);

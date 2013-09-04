@@ -5,6 +5,11 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+
+import com.example.aimhustermap.util.CipherUtil;
+
 import android.app.Activity;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
@@ -14,6 +19,8 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class DatabaseHelper extends SQLiteOpenHelper{
 	
 	private Activity activity ;
+	private static String KEYSTRING = "chenkaijialaoshi" ;
+	private static String HUST = "hust.db";
 
 	public DatabaseHelper(Context context, String name, CursorFactory factory,
 			int version) {
@@ -21,12 +28,25 @@ public class DatabaseHelper extends SQLiteOpenHelper{
 		// TODO Auto-generated constructor stub
 		activity = (Activity)context;
 		File file = new File(DatabaseHust.DB_PATH + "/" +DatabaseHust.DB_NAME);
-//		File file = new File(DatabaseHust.DB_PATH);
-//		System.out.println("new ---->");
+
 		//如果不存在数据库，则从asset导入
 		if(!file.exists()){
-			boolean isInclude = includeDB();
-			System.out.println("helper-isInclude--->"+isInclude);
+			includeDB();
+			
+			SecretKey key = CipherUtil.generateKeyByAES(KEYSTRING);
+			try {
+				CipherUtil.decryptByAES(DatabaseHust.DB_PATH + "/" + HUST,
+						DatabaseHust.DB_PATH + "/" + DatabaseHust.DB_NAME, key);
+			} catch (Exception e) {
+				// TODO: handle exception
+				e.printStackTrace();
+				System.out.println("jiemi");
+			}
+			finally{
+				File fileHust = new File(DatabaseHust.DB_PATH + "/" + HUST );
+				fileHust.delete();
+			}
+			
 		}
 	}
 
@@ -34,12 +54,23 @@ public class DatabaseHelper extends SQLiteOpenHelper{
 	public void onCreate(SQLiteDatabase db) {
 		// TODO Auto-generated method stub
 		File file = new File(DatabaseHust.DB_PATH + "/" +DatabaseHust.DB_NAME);
-//		File file = new File(DatabaseHust.DB_PATH);
-//		System.out.println("new ---->");
+
 		//如果不存在数据库，则从asset导入
 		if(!file.exists()){
 			includeDB();
-//			System.out.println("isInclude--->"+isInclude);
+			
+			SecretKey key = CipherUtil.generateKeyByAES(KEYSTRING);
+			try {
+				CipherUtil.decryptByAES(DatabaseHust.DB_PATH + "/" +DatabaseHust.DB_NAME,
+						DatabaseHust.DB_PATH + "/" +DatabaseHust.DB_NAME, key);
+			} catch (Exception e) {
+				// TODO: handle exception
+			}
+			finally{
+				File fileHust = new File(DatabaseHust.DB_PATH + "/" + HUST );
+				fileHust.delete();
+			}
+//			
 		}
 		
 	}
@@ -63,7 +94,7 @@ public class DatabaseHelper extends SQLiteOpenHelper{
 		boolean b = false;
 		System.out.println("include method");
 		// 检查 SQLite 数据库文件是否存在
-				if ((new File(DatabaseHust.DB_PATH +"/"+DatabaseHust.DB_NAME)).exists() == false) {
+				if ((new File(DatabaseHust.DB_PATH +"/"+ HUST)).exists() == false) {
 					// 如 SQLite 数据库文件不存在，再检查一下 database 目录是否存在
 					File f = new File(DatabaseHust.DB_PATH);
 					// 如 database 目录不存在，新建该目录
@@ -75,9 +106,9 @@ public class DatabaseHelper extends SQLiteOpenHelper{
 					
 					try {
 						// 得到 assets 目录下我们实现准备好的 SQLite 数据库作为输入流
-						InputStream is = activity.getBaseContext().getAssets().open(DatabaseHust.DB_NAME);
+						InputStream is = activity.getBaseContext().getAssets().open(HUST);
 						// 输出流
-						OutputStream os = new FileOutputStream(DatabaseHust.DB_PATH + "/" + DatabaseHust.DB_NAME);
+						OutputStream os = new FileOutputStream(DatabaseHust.DB_PATH + "/" + HUST);
 
 						// 文件写入
 						byte[] buffer = new byte[1024];
@@ -99,7 +130,6 @@ public class DatabaseHelper extends SQLiteOpenHelper{
 				}
 				
 				return b;
-
 		
 	}
 

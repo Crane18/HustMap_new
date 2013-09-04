@@ -7,6 +7,9 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.baidu.platform.comapi.basestruct.GeoPoint;
+
+
 import android.R.integer;
 import android.app.Activity;
 import android.content.Context;
@@ -14,7 +17,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.text.StaticLayout;
 
-import com.baidu.platform.comapi.basestruct.GeoPoint;
 
 public class DatabaseHust {
 	

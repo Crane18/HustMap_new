@@ -12,6 +12,8 @@ import android.view.View;
 import android.view.Window;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+
+import com.example.aimhustermap.R;
 import com.example.aimhustermap.adapter.ViewPagerAdapter;
 
 

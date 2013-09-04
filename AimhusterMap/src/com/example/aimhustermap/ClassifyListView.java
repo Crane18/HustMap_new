@@ -5,9 +5,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.baidu.mapapi.map.OverlayItem;
+import com.example.aimhustermap.R;
 import com.example.aimhustermap.adapter.FenleiAdapter;
 import com.example.aimhustermap.db.DatabaseHust;
 import com.example.aimhustermap.db.DatabaseSearcher;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Dialog;
@@ -95,7 +97,7 @@ public class ClassifyListView extends Activity {
 			@Override
 			public void onClick(View arg0) {
 				// TODO Auto-generated method stub
-				 Intent intent=getIntent();
+				    Intent intent=getIntent();
 	        		Bundle dataBundle=new Bundle();
 	        		dataBundle.putString("key",null);
 	        		intent.putExtras(dataBundle);

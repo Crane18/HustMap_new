@@ -19,7 +19,7 @@ public class ManagerApp extends Application {
     public boolean m_bKeyRight = true;
     BMapManager mBMapManager = null;
 
-    public static final String strKey = "45060A23F53563397038389CFE6B11970A57E169";
+    public static final String strKey = "FB17e8f2c0b9e5cee82ce92507b0c507";
     
     private List<Activity> mainActivity = new ArrayList<Activity>();  
     

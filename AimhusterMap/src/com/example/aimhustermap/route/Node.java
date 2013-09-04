@@ -9,11 +9,11 @@ public class Node {
 	
 	private GeoPoint pointID;
 
-	// 起始节点到当前节点的距离
+	// 起始节点到此节点的距离（经过某条路线到该点的实际距离）
 	double GList ;
-	// 当前节点到目的节点的距离
+	// 此节点到目的节点的距离（预估直线距离）
 	double HList ;
-	//起始节点经过当前节点到目的节点的距离
+	//起始节点经过此节点到目的节点的距离（预估）
 	double FList ;
 	
 	private Node fatherNode;

@@ -17,35 +17,31 @@ public class RoutePlanner {
 	static double DEF_2PI= 6.28318530712; // 2*PI
 	static double DEF_PI180= 0.01745329252; // PI/180.0
 	static double DEF_R =6370693.5; // radius of earth
-	
+
 	public Node startNode;
 	public Node endNode;
 	public ArrayList<Node> nodes;
 	// 开启队列，用于存放待处理的节点
     public	Queue<Node> openQueue ;
 	// 关闭队列，用于存放已经处理过的节点
-	public Queue<Node> closedQueue ;
+	public Queue<Node> closedQueue ;  	
 	
-	public RoutePlanner(GeoPoint start,GeoPoint end,ArrayList<Node> nodes)
+	public RoutePlanner(Node startNode,Node endNode,ArrayList<Node> nodes)
 	{
 		
 		this.nodes = nodes;
-		
-		for (Node node : nodes) {
-			if(node.getPointID().equals(start))
-			{
-				this.startNode = node;
-			}
-			else if(node.getPointID().equals(end))
-			{
-				this.endNode = node;
-			}
-		}
+		this.startNode = startNode;
+		this.endNode = endNode;
 		
 		openQueue = new LinkedList<Node>();
 		closedQueue = new LinkedList<Node>();
+		if(startNode != null && endNode != null )
+		{
+			init();	
+			start();	
+		}
 		
-		init();
+		
 	}
 	
 	/*
@@ -58,18 +54,17 @@ public class RoutePlanner {
 	 */
 	private void init() {
 		openQueue.offer(startNode);
-		int start_x = startNode.getPointID().getLatitudeE6();
-		int start_y = startNode.getPointID().getLongitudeE6();
-		int end_x = endNode.getPointID().getLatitudeE6();
-		int end_y = endNode.getPointID().getLongitudeE6();
-
+		
 		// 起始节点到当前节点的距离
 		startNode.GList = 0;
 		// 当前节点到目的节点的距离
-		startNode.HList = GetShortDistance(start_y, start_x, end_y, end_x);
+		startNode.HList = GetShortDistance(startNode.getPointID(), endNode.getPointID());
 		// f(x) = g(x) + h(x)
 		startNode.FList = startNode.GList+startNode.HList;
-				
+		
+		for (Node node : nodes) {
+			node.setFather(null);
+		}
 	}
 	
 	
@@ -81,12 +76,12 @@ public class RoutePlanner {
 	 *   开启列表与关闭列表的成员。   
 	 */
 	public void start() {
-		Node currentPoint;
+		Node currentNode;
 //       int i = 0;
-		while ((currentPoint = findShortestFPoint()) != null) {
-			if (currentPoint.equals(endNode))
+		while ((currentNode = findShortestFNode()) != null) {
+			if (currentNode.equals(endNode))
 				return;
-			updateNeighborPoints(currentPoint);
+			updateNeighborNodes(currentNode);
 //			System.out.println("-------->distance = "+ currentPoint.FList);
 //			i++;
 		}
@@ -104,15 +99,15 @@ public class RoutePlanner {
 	 *       
 	 * 输出： 是否有效
 	 */
-	private boolean checkPosValid(Node point) {
+	private boolean checkPosValid(Node node) {
 		
-		if (nodes.contains(point)) {
+		if (nodes.contains(node)) {
 			// 检查当前节点是否已在关闭队列中，若存在，则返回 "false"
 			Iterator<Node> it = closedQueue.iterator();
-			Node node = null;
+			Node node_1 = null;
 			while (it.hasNext()) {
-				if ((node = it.next()) != null) {
-					if (node.equals(point))
+				if ((node_1 = it.next()) != null) {
+					if (node_1.equals(node))
 						return false;
 				}
 			}
@@ -129,26 +124,26 @@ public class RoutePlanner {
 	 * 
 	 * 输出：最短路径所经过的节点
 	 */
-	private Node findShortestFPoint() {
-		Node currentPoint = null;
-		Node shortestFPoint = null;
+	private Node findShortestFNode() {
+		Node currentNode = null;
+		Node shortestFNode = null;
 		double shortestFValue = Double.MAX_VALUE;
 
 		Iterator<Node> it = openQueue.iterator();
 		while (it.hasNext()) {
-			currentPoint = it.next();
-			if (currentPoint.FList <= shortestFValue) {
-				shortestFPoint = currentPoint;
-				shortestFValue = currentPoint.FList;
+			currentNode = it.next();
+			if (currentNode.FList <= shortestFValue) {
+				shortestFNode = currentNode;
+				shortestFValue = currentNode.FList;
 			}
 		}
 
 		if (shortestFValue != Double.MAX_VALUE) {
-			openQueue.remove(shortestFPoint);
-			closedQueue.offer(shortestFPoint);
+			openQueue.remove(shortestFNode);
+			closedQueue.offer(shortestFNode);
 		}
 
-		return shortestFPoint;
+		return shortestFNode;
 	}
 
 	/*
@@ -158,7 +153,7 @@ public class RoutePlanner {
 	 * 
 	 * 输入： 当前节点
 	 */
-	private void updateNeighborPoints(Node currentNode) {
+	private void updateNeighborNodes(Node currentNode) {
 	
 		
 		for(int i = 0;i< currentNode.getChildNodes().size();i++)
@@ -166,7 +161,7 @@ public class RoutePlanner {
 			if(checkPosValid(currentNode.getChildNodes().get(i)))
 			{
 
-				updatePoint(currentNode, currentNode.getChildNodes().get(i));
+				updateNode(currentNode, currentNode.getChildNodes().get(i));
 			}
 		}
 	}
@@ -182,17 +177,14 @@ public class RoutePlanner {
 	 * 输入： 上一跳节点（又：父节点）
 	 *       当前节点
 	 */
-	private void updatePoint(Node lastPoint, Node currentPoint) {
-		int last_x = lastPoint.getPointID().getLatitudeE6();
-		int last_y = lastPoint.getPointID().getLongitudeE6();
-		int current_x = currentPoint.getPointID().getLatitudeE6();
-		int current_y = currentPoint.getPointID().getLongitudeE6();
+	private void updateNode(Node lastNode, Node currentNode) {
+		
 
 		// 起始节点到当前节点的距离
-		double temp_g = lastPoint.GList + GetShortDistance(last_y, last_x, current_y, current_x);
+		double temp_g = lastNode.GList + GetShortDistance(lastNode.getPointID(), currentNode.getPointID());
 
 		// 当前节点到目的位置的距离
-		double temp_h = GetShortDistance(current_y, current_x, endNode.getPointID().getLongitudeE6(),endNode.getPointID().getLatitudeE6());
+		double temp_h = GetShortDistance(currentNode.getPointID(), endNode.getPointID());
 		// f(x) = g(x) + h(x)
 		double temp_f = temp_g + temp_h;
 
@@ -200,16 +192,16 @@ public class RoutePlanner {
 		// 1) 起始节点到当前节点距离
 		// 2) 当前节点到目的节点的距离
 		// 3) 起始节点到目的节点距离
-		if (!openQueue.contains(currentPoint)) {
-			openQueue.offer(currentPoint);
-			currentPoint.setFather(lastPoint);
+		if (!openQueue.contains(currentNode)) {
+			openQueue.offer(currentNode);
+			currentNode.setFather(lastNode);
 
 			// 起始节点到当前节点的距离
-			currentPoint.GList = temp_g;
+			currentNode.GList = temp_g;
 			// 当前节点到目的节点的距离
-			currentPoint.HList = temp_h;
+			currentNode.HList = temp_h;
 			// f(x) = g(x) + h(x)
-			currentPoint.FList = temp_f;
+			currentNode.FList = temp_f;
 			
 			
 		} else {
@@ -220,15 +212,15 @@ public class RoutePlanner {
 			// 1) 起始节点到当前节点距离
 			// 2) 当前节点到目的节点的距离
 			// 3) 起始节点到目的节点距离
-			if (temp_f < currentPoint.FList) {
+			if (temp_f < currentNode.FList) {
 				// 起始节点到当前节点的距离
-				currentPoint.GList = temp_g;
+				currentNode.GList = temp_g;
 				// 当前节点到目的节点的距离
-				currentPoint.HList = temp_h;
+				currentNode.HList = temp_h;
 				// f(x) = g(x) + h(x)
-				currentPoint.FList = temp_f;
+				currentNode.FList = temp_f;
 				// 更新当前节点的父节点
-				currentPoint.setFather(lastPoint);
+				currentNode.setFather(lastNode);
 			}
 		}
 	}
@@ -241,9 +233,8 @@ public class RoutePlanner {
         ArrayList<GeoPoint>  points = new ArrayList<GeoPoint>();
         ArrayList<Node> passedPoints = new ArrayList<Node>();
         father_point = endNode;
+      
 		while (father_point != null) {
-
-//           System.out.println("---------------------->aaaaaaa");
 			passedPoints.add(father_point);
 			father_point = father_point.getFather();
 		}
@@ -254,7 +245,8 @@ public class RoutePlanner {
 		}
 		
 		RoutePlanResult result = new RoutePlanResult(points, startNode.FList);
-		
+		points = null;
+		passedPoints = null;
 		return result;
 
 	}
@@ -263,16 +255,16 @@ public class RoutePlanner {
 	/*
 	获取地图上两点之间距离的方法
 	*/	
-	public double GetShortDistance(double lon1, double lat1, double lon2, double lat2)
+	public double GetShortDistance(GeoPoint sPoint, GeoPoint ePoint)
 		{
 			double ew1, ns1, ew2, ns2;
 			double dx, dy, dew;
 			double distance;
 			// 角度转换为弧度
-			ew1 = lon1 *(1e-6)* DEF_PI180;
-			ns1 = lat1 *(1e-6)* DEF_PI180;
-			ew2 = lon2 *(1e-6)* DEF_PI180;
-			ns2 = lat2 *(1e-6)* DEF_PI180;
+			ew1 = sPoint.getLongitudeE6() *(1e-6)* DEF_PI180;
+			ns1 = sPoint.getLatitudeE6() *(1e-6)* DEF_PI180;
+			ew2 = ePoint.getLongitudeE6() *(1e-6)* DEF_PI180;
+			ns2 = ePoint.getLatitudeE6() *(1e-6)* DEF_PI180;
 			// 经度差
 			dew = ew1 - ew2;
 			// 若跨东经和西经180 度，进行调整

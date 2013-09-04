@@ -45,7 +45,7 @@ public class DatabaseSearcher {
 	private final int ERROR = 10;
 	
 	//数据库版本后
-	private final int VERSION = 17;
+	private final int VERSION = 19;
 	
 	private final String STRING[] = {"华中科技大学","华科","华中大"};
 	

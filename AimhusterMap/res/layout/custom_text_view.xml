@@ -6,56 +6,51 @@
 	    android:layout_height="wrap_content"
 	    >
 	    
-    <TextView
-        android:id="@+id/popleft"
+     <LinearLayout 
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="@drawable/popup_side"
-         android:gravity="center"
-        android:textStyle="bold"
-         android:textColor="#3814ed"
-        android:text="更新位置"
-        android:textSize="12sp" />
+	    android:layout_height="wrap_content"
+	    android:orientation="vertical"
+	    android:id="@+id/popleft"
+         >
+         <TextView
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content"
+           android:background="@drawable/info"
+           android:gravity="center"/>
+         
+         <TextView
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content"
+           android:background="@drawable/triangle_left"
+           android:gravity="center"/>
+     </LinearLayout>
+    
+       
 
    
-     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+     <LinearLayout 
 	    android:layout_width="wrap_content"
 	    android:layout_height="wrap_content"
 	    android:orientation="vertical"
-	    android:id="@+id/popinfo"
+	    android:id="@+id/popright"
 	    >
 	    
-    <TextView
-        android:id="@+id/textcache"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="@drawable/popup_middle"
-        android:gravity="center"
-        android:textStyle="bold"
-        android:textColor="@android:color/black"
-        android:textSize="12sp" />
+      <TextView
+         android:layout_width="wrap_content"
+         android:layout_height="wrap_content"
+         android:background="@drawable/route"
+         />
     
      <TextView
-        android:id="@+id/popdown"
-        android:layout_width="fill_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@drawable/popup_down"
-        android:textColor="@android:color/black"
-        android:textSize="12sp" />
+        android:background="@drawable/triangle_right" 
+         />
     
     
     </LinearLayout>
 
      
-    <TextView
-        android:id="@+id/popright"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="@drawable/popup_side"
-        android:textColor="#3814ed"
-        android:gravity="center"
-        android:textStyle="bold"
-        android:text="更新marker"
-        android:textSize="12sp" />
+    
 
 </LinearLayout>

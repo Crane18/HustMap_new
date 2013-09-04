@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.aimhustermap"
-    android:versionCode="1"
-    android:versionName="1.0" 
+    android:versionCode="2"
+    android:versionName="1.0.1" 
     >
      
     
@@ -24,7 +24,6 @@
         <activity
             android:name="com.example.aimhustermap.Lanucher_Activity"
             android:label="@string/app_name"
-            android:launchMode="singleTask"            
            >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -70,13 +69,16 @@
             android:name="com.example.aimhustermap.NavigateActivity"/>
         <activity
             android:name="com.example.aimhustermap.TroubleActivity"/>
+        <activity android:name="com.example.aimhustermap.RouteSearchActivity"/>
+            
+       
         <meta-data android:value="52137b6e56240b74e407db98" android:name="UMENG_APPKEY"></meta-data>
         <meta-data android:value="Channel ID" android:name="UMENG_CHANNEL"/>
-         <service
-            android:name="com.baidu.location.f"
-            android:enabled="true"
-            android:process=":remote" >
-        </service>
+         <service 
+             android:name="com.baidu.location.f" 
+             android:enabled="true"
+             android:process=":remote">
+         </service>
     </application>
      <uses-permission android:name="android.permission.WRITE_MEDIA_STORAGE" >  
        <group gid="media_rw" />  
@@ -84,8 +86,7 @@
     <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-     <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS"/>
-    
+    <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     

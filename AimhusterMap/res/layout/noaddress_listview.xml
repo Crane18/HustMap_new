@@ -5,13 +5,7 @@
     android:descendantFocusability="blocksDescendants" 
     android:background="@drawable/detail_listitem">
     
-    <TextView 
-        android:id="@+id/phonenumber"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:textSize="9pt"
-        />
+    
     
     <ImageButton
         android:id="@+id/docall_noaddress"
@@ -21,8 +15,21 @@
         android:onClick="noaddress_click"  
         android:focusable="false" 
         android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
         android:layout_marginRight="10dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
        
+        />
+    
+    <TextView 
+        android:id="@+id/phonenumber"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toLeftOf="@id/docall_noaddress"
+        android:layout_marginRight="30dp"
+        android:layout_centerVertical="true"
+        android:textSize="9pt"
         />
 
      <TextView 
