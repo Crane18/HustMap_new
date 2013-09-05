@@ -102,18 +102,23 @@ public class HusterMain extends Activity {
 	public String fenleiString = null;//记录所选的分类类别
 	public GeoPoint clickPoint = null;
 	//地图区域边界
-	static int Awedge = 114414894;
+	static int Awedge = 114411773;
 	static int Aeedge = 114423949;
 	static int Asedge = 30512946;
 	static int Anedge = 30515357;
 	
-	static int Bwedge = 114433930;
+	static int Bwedge = 114430156;
 	static int Beedge = 114441399;
 	static int Bsedge = 30511352;
 	static int Bnedge = 30515871;
 	
+	static int SNBorder = 30520134;
+	
 	static int EWBorder = 114431917;
 	static int EWBorder1 = 114428513;
+	
+	static int sideLenght = 2800;
+	static int optimizedLenght = 600;
 	
 	RoutePlanner planner;
 	public MyRouteOverlay routeOverlay;
@@ -239,6 +244,7 @@ public class HusterMain extends Activity {
 	public List<DBRouteNode>  DBnodesList = null;
 	public DBRouteSearcher myRouteSearcher = null;
 	public ArrayList<Node> lableNodes = new ArrayList<Node>();
+	public ArrayList<Node> slableNodes = new ArrayList<Node>();
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -420,6 +426,28 @@ public class HusterMain extends Activity {
 //        GeoPoint point11 = new GeoPoint(30520736,114431225);
 //        GeoPoint point12 = new GeoPoint(30520806,114430579);
 //        GeoPoint point13 = new GeoPoint(30520891,114429407);
+        
+        GeoPoint sPoint1 = new GeoPoint(30513448, 114415214);
+        GeoPoint sPoint2 = new GeoPoint(30513619, 114416687);
+        GeoPoint sPoint3 = new GeoPoint(30513440, 114419894);
+        GeoPoint sPoint4 = new GeoPoint(30513074, 114423478);
+        for (int i = 0; i < nodeList.size(); i++) {
+			if (nodeList.get(i).getPointID().equals(sPoint1)) {
+				slableNodes.add(nodeList.get(i));
+			}
+			if (nodeList.get(i).getPointID().equals(sPoint2)) {
+				slableNodes.add(nodeList.get(i));
+			}
+			if (nodeList.get(i).getPointID().equals(sPoint3)) {
+				slableNodes.add(nodeList.get(i));
+			}
+			if (nodeList.get(i).getPointID().equals(sPoint4)) {
+				slableNodes.add(nodeList.get(i));
+			}
+		}
+        System.out.println("------------->slableNodes.size = "+slableNodes.size());
+        
+        
         ArrayList<GeoPoint> points = new ArrayList<GeoPoint>();
         points.add(point1);
         points.add(point2);
@@ -498,13 +526,16 @@ public class HusterMain extends Activity {
 							mMapView.getOverlays().remove(routeOverlay);
 							mMapView.refresh();
 						}	
-						
+						pop.hidePop();
+						mMapView.refresh();
 //					showRouteSearchPopupWindow();
 					if (locationFinish) {
 						
 						double distance = Double.MAX_VALUE;
 						double lat = locData.latitude;
 						double lon = locData.longitude;
+//						double lat = 30.517407;
+//						double lon = 114.409271;		
 						ArrayList<GeoPoint>  passedPoints = new ArrayList<GeoPoint>();
 						GeoPoint locGeoPoint = new GeoPoint((int)(lat * 1E6), (int)(lon * 1E6));
 //						GeoPoint transitonPoint = new GeoPoint(arg0, arg1)
@@ -564,8 +595,7 @@ public class HusterMain extends Activity {
 					else {
 						Toast.makeText(HusterMain.this, "请先定位确定起始点！", Toast.LENGTH_SHORT).show();
 					}
-				    pop.hidePop();
-					mMapView.refresh();
+				    
 				}
 			}
        };
@@ -1840,15 +1870,26 @@ public class HusterMain extends Activity {
 		if (startLon > Awedge && startLon < Aeedge && startLat > Asedge && startLat < Anedge) {
 			if (endLon > Bwedge && endLon < Beedge && endLat > Bsedge && endLat < Bnedge) {
 				GeoPoint tempPoint = new GeoPoint(Asedge, startLon);
-				return PointToNode(tempPoint, nodeList, endNode.getPointID());
+				return PointToNode(tempPoint, slableNodes, endNode.getPointID());
 //				return findnearestNode(tempPoint, nodeList);
 			}
-			else if (endLat > Bnedge && endLon > EWBorder) {
-				return findnearestNode(startNode.getPointID(), lableNodes);
+			else if (endLat > Bnedge && endLon >= EWBorder1) {
+				return PointToNode(startNode.getPointID(), lableNodes, endNode.getPointID());
+//				return findnearestNode(startNode.getPointID(), lableNodes);
 			}
+			
+			else if (endLon < 114410466) {//紫淞公寓广场经度
+				return null;
+			}
+			
 			else {
-				GeoPoint temPoint = new GeoPoint(startLat, endLon);
-				return PointToNode(temPoint, nodeList, endNode.getPointID());
+				GeoPoint tempPoint = getTransitionPoint(startLat, startLon, endLat, endLon);
+				if (tempPoint != null) {
+					return PointToNode(tempPoint, nodeList, startNode.getPointID());
+				}
+				else {
+					return null;
+				}
 //				return findnearestNode(temPoint, nodeList);
 			}
 		}
@@ -1856,7 +1897,7 @@ public class HusterMain extends Activity {
 		else if (startLon > Bwedge && startLon < Beedge && startLat > Bsedge && startLat < Bnedge) {
 			if (endLon > Awedge && endLon < Aeedge && endLat > Asedge && endLat < Anedge ) {
 				GeoPoint tempPoint = new GeoPoint(Asedge, endLon);
-				return PointToNode(tempPoint, nodeList, startNode.getPointID());
+				return PointToNode(tempPoint, slableNodes, startNode.getPointID());
 //				return findnearestNode(tempPoint, nodeList);
 			}
 			else if (endLon < EWBorder1) {
@@ -1876,11 +1917,57 @@ public class HusterMain extends Activity {
 			}
 		}
 		
-		else {
-			GeoPoint tempPoint = new GeoPoint(startLat, endLon);
-			return PointToNode(tempPoint, nodeList, startNode.getPointID());
+		else if (startLon < EWBorder && startLon > Bwedge && startLat < SNBorder && startLat > Bnedge) {
+			if (endLon < EWBorder1 && endLat > Anedge) {
+				return PointToNode(endNode.getPointID(), lableNodes, startNode.getPointID());
+			}
+			else {
+				return null;
+			}
+		}
+		else if (startLat > SNBorder && startLon > EWBorder1 && startLon < EWBorder) {
+			if (endLon < EWBorder1 && endLat > (SNBorder + 500)) {
+				GeoPoint tempPoint = getTransitionPoint(startLat, startLon, endLat, endLon);
+				if (tempPoint != null) {
+					return PointToNode(tempPoint, nodeList, startNode.getPointID());
+				}
+				else {
+					return null;
+				}
+			}
+			else if(endLon < EWBorder1 && endLat <= (SNBorder +500)){
+				return PointToNode(endNode.getPointID(), lableNodes, startNode.getPointID());
+			}
+			else {
+				return null;
+			}
+			
+		}
+		
+		else if(startLon < EWBorder1 && endLon > EWBorder){
+			return PointToNode(startNode.getPointID(), lableNodes, endNode.getPointID());
 //			return findnearestNode(tempPoint, nodeList);
 		}
+		else {
+			
+			GeoPoint tempPoint = getTransitionPoint(startLat, startLon, endLat, endLon);
+			if (tempPoint != null) {
+				return PointToNode(tempPoint, nodeList, startNode.getPointID());
+			}
+			else {
+				return null;
+			}
+		}
+	}
+	
+	public GeoPoint getTransitionPoint(int startLat, int startLon ,int endLat , int endLon)
+	{
+		if (Math.abs(startLat-endLat) > sideLenght && Math.abs(startLon-endLon) > sideLenght) {
+			int finalLat = (startLat < endLat) ? (startLat + optimizedLenght) : (startLat - optimizedLenght);
+			int finalLon = (startLon < endLon) ? (endLon - optimizedLenght) : (endLon + optimizedLenght);
+			return new GeoPoint(finalLat, finalLon);
+		}
+		else return null;
 	}
 	
 	public GeoPoint getTheCenter(GeoPoint point1, GeoPoint point2)
